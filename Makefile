@@ -1,9 +1,9 @@
 default: all
 
-CFLAGS := -I./../../include  -Wall
+CFLAGS := -I./include  -Wall
 CC := g++
 
-BINARIES := darwin-on
+BINARIES := dynamixel-ach
 all : $(BINARIES)
 
 LIBS := -lrt -lstdc++ -lach

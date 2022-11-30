@@ -16,12 +16,12 @@
 
 /* Author: Daniel M. Lofaro */
 
-#include "lofaro_darwin_ach.h"
+#include "dynamixel_ach.h"
 #include <unistd.h>
 int main()
 {
   printf("Make System Object\n");
-  DarwinAch da = DarwinAch();
+  DynamixelAch da = DynamixelAch();
   da.setDebug(true);
   int r = 0;
   
@@ -29,7 +29,7 @@ int main()
   r = da.open();
 
   printf("Start System Loop\n");
-  r = da.loop(125.0, HZ_STATE_125_IMU);
+  r = da.loop(200.0, HZ_STATE_200_REF);
   
   return 0;
 }

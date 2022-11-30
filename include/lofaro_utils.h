@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <cstddef>
 
-
 class LofaroUtils
 {
   #define MOTOR_SPEED_SCALE     0.11 / 60.0  * 2.0 * M_PI
@@ -27,8 +26,6 @@ class LofaroUtils
       useconds = the_time.tv_usec;
 
       duration = seconds + useconds / 1000000.0;
-
-     //  printf("%f\n", duration);
       return duration;
     }
 
@@ -91,7 +88,6 @@ class LofaroUtils
     double tock = 0.0;   
     double hz   = 100.0;
     double T    = 0.01;
-
 };
 #endif
 #define LOFARO_UTILS 1

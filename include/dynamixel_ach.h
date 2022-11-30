@@ -1,9 +1,9 @@
 #define DARWIN_LOFARO_ACH 1
 #define DARWIN_LOFARO_DYN 1
 
-#include "lofaro_darwin.h"
-#include "lofaro_includes_ach.h"
-#include "lofaro_defines_ach.h"
+#include "lofaro_dynamixel.h"
+#include "lofaro_dynamixel_includes_ach.h"
+#include "lofaro_dynamixel_defines_ach.h"
 
 #include <chrono>
 #include <functional>
@@ -269,6 +269,13 @@ int DarwinAch::do_cmd(int mode)
           this->the_mode_state = d0;
           this->dl->rate(50.0);
           printf("Set HZ_STATE_50_IMU\n");
+          do_return = true; 
+        }
+        else if( d0 == HZ_STATE_200_MOTOR )
+        { 
+          this->the_mode_state = d0;
+          this->dl->rate(200.0);
+          printf("Set HZ_STATE_200_MOTOR\n");
           do_return = true; 
         }
         else if( d0 == HZ_STATE_125_IMU )
@@ -631,74 +638,6 @@ int DarwinAch::do_ref(int mode)
       break;
     }
 
-    case MODE_WALKING:
-    {
-//      printf("Mode: MODE_WALKING\n");
-      for( int i = 0; i <= DARWIN_MOTOR_MAX; i++ )
-      {
-        this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref_walking.motor_ref[i].pos;
-        this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref_walking.motor_ref[i].speed;
-        this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref_walking.motor_ref[i].torque;
-      }
-      break;
-    }
-
-    case MODE_WALKING_LOWER_ONLY_STIFF_HIP_PITCH:
-    {
-//      printf("Mode: MODE_WALKING_LOWER_ONLY\n");
-      for( int i = 0; i <= DARWIN_MOTOR_MAX; i++ )
-      {
-        if( (i >= DARWIN_MOTOR_MIN_LOWER) & (i <= DARWIN_MOTOR_MAX_LOWER) )
-        {
-          this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref_walking.motor_ref[i].pos;
-          this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref_walking.motor_ref[i].speed;
-          this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref_walking.motor_ref[i].torque;
-        }
-        else
-        {
-          this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref.motor_ref[i].pos;
-          this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref.motor_ref[i].speed;
-          this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref.motor_ref[i].torque;
-        }
-      }
-      break;
-    }
-    case MODE_WALKING_LOWER_ONLY:
-    {
-//      printf("Mode: MODE_WALKING_LOWER_ONLY\n");
-      for( int i = 0; i <= DARWIN_MOTOR_MAX; i++ )
-      {
-        if( (i >= DARWIN_MOTOR_MIN_LOWER) & (i <= DARWIN_MOTOR_MAX_LOWER) )
-        {
-          if( (i == RHP) )
-          {
-            this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref_walking.motor_ref[i].pos
-                                                        +
-                                                        this->darwin_ref.motor_ref[RHP].pos;
-          }
-          else if( (i == LHP) )
-          {
-            this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref_walking.motor_ref[i].pos
-                                                        -
-                                                        this->darwin_ref.motor_ref[RHP].pos;
-          }
-	  else
-          {
-            this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref_walking.motor_ref[i].pos;
-          }
-          this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref_walking.motor_ref[i].speed;
-          this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref_walking.motor_ref[i].torque;
-        }
-        else
-        {
-          this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref.motor_ref[i].pos;
-          this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref.motor_ref[i].speed;
-          this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref.motor_ref[i].torque;
-        }
-      }
-      break;
-    }
-    
     default:
     {
 //      printf("Mode: MODE_REF (Default)\n");

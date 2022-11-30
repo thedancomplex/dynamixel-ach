@@ -3,7 +3,6 @@
 #include "dynamixel_sdk/dynamixel_sdk.h"
 //#include "/usr/local/include/dynamixel_sdk/dynamixel_sdk.h"
 
-
 // Initialize PortHandler instance
 // Set the port path
 // Get methods and members of PortHandlerLinux or PortHandlerWindows
@@ -157,7 +156,7 @@ int DarwinLofaro::setLowLatency(const char* the_serial_port, bool low_latency)
 /* Get IMU State */
 int DarwinLofaro::getImu()
 {
-//  dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
+  // dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
   bool dxl_addparam_result = false;               // addParam result
   groupBulkReadImu.clearParam();
 
@@ -306,7 +305,6 @@ int DarwinLofaro::off()
   return RETURN_OK;
 }
 
-
 /* Turn off "id" */
 int DarwinLofaro::off(int id)
 {
@@ -334,14 +332,11 @@ int DarwinLofaro::off(int id)
     return RETURN_OK;
 }
 
-
 double DarwinLofaro::int2double(uint16_t val)
 {
   double the_out = (double)((int32_t)val - 512) / 1023.0;
   return the_out;
 }
-
-
 
 /* Stops and turns off everything */
 int DarwinLofaro::stop()
@@ -376,8 +371,6 @@ double DarwinLofaro::time()
   return this->lut->getTime();
 }
 
-
-
 /* Get Left and Right FT states */
 int DarwinLofaro::getFt()
 { 
@@ -386,7 +379,6 @@ int DarwinLofaro::getFt()
   if( ret > 0 ) return RETURN_FAIL;
   return RETURN_OK; 
 }
-
 
 /* FT specific char 2 double */
 double DarwinLofaro::ft_char2double(uint8_t val, int* err)
@@ -402,8 +394,6 @@ double DarwinLofaro::ft_char2double(uint8_t val, int* err)
     return the_out;
 }
 
-
-
 /* Get "id" FT state */
 int DarwinLofaro::getFt(int id)
 { 
@@ -416,7 +406,6 @@ int DarwinLofaro::getFt(int id)
   else if (id == ENUM_FT_RIGHT) { the_index = ENUM_FT_RIGHT; id = ID_FT_RIGHT; }
   else return RETURN_FAIL;
 
-
   bool dxl_addparam_result = false;               // addParam result
   groupBulkReadFt.clearParam();
 
@@ -424,7 +413,6 @@ int DarwinLofaro::getFt(int id)
   // +1 is added to read the voltage
   dxl_addparam_result = groupBulkReadFt.addParam(id, FT_ADDRESS_START, FT_ADDRESS_LENGTH);
   if (dxl_addparam_result != true) return RETURN_FAIL;
-
 
   bool dxl_getdata_result = false;                // GetParam result
   uint8_t dxl_error = 0;                          // Dynamixel error
@@ -448,7 +436,6 @@ int DarwinLofaro::getFt(int id)
   uint16_t buff_fsr_y    = groupBulkReadFt.getData(id, FT_ADDRESS_FSR_Y, 2);
   uint8_t  buff_voltage  = groupBulkReadFt.getData(id, FT_ADDRESS_VOLTAGE, 1);
 
-
   this->darwin_data.ft[the_index].s0   = this->int2double(buff_s1)  * FT_SCALE;
   this->darwin_data.ft[the_index].s1   = this->int2double(buff_s2)  * FT_SCALE;
   this->darwin_data.ft[the_index].s2   = this->int2double(buff_s3)  * FT_SCALE;
@@ -467,8 +454,6 @@ int DarwinLofaro::getFt(int id)
 
 return RETURN_OK; 
 }
-
-
 
 uint16_t DarwinLofaro::double2uint16(double val)
 {
@@ -491,7 +476,6 @@ int DarwinLofaro::setMotPos(int mot, double val)
   this->darwin_data.motor_ref[id].pos = val;
   return RETURN_OK;
 }
-
 
 int DarwinLofaro::setMotTorque(int mot, double val)
 {
@@ -517,7 +501,6 @@ int DarwinLofaro::setMotSpeed(int mot, double val)
   return RETURN_OK;
 }
 
-
 int DarwinLofaro::stageMotor()
 {
   /* Stage all motor positions torques and speeds */
@@ -534,7 +517,6 @@ int DarwinLofaro::stageMotor()
 /* Stage Motor Position */
 int DarwinLofaro::stageMotor(int mot)
 {
-
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
     uint8_t dxl_error = 0;                          // Dynamixel error
 
@@ -677,7 +659,7 @@ int DarwinLofaro::getMotor()
 /* Get Motor State */
 int DarwinLofaro::getMotor(int id)
 {
-//  dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
+  // dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
   bool dxl_addparam_result = false;               // addParam result
   groupBulkReadMotor.clearParam();
 
@@ -780,7 +762,6 @@ int DarwinLofaro::setDGain(int mot, double val)
   return this->setGain(mot, val, DARWIN_ENUM_D_GAIN);
 }
 
-
 /* Get Button */
 uint8_t DarwinLofaro::getButton()
 {
@@ -802,13 +783,11 @@ int DarwinLofaro::getButton(int butt, uint8_t buff)
   return 0;
 }
 
-
 int DarwinLofaro::getButton(int butt)
 {
   uint8_t buff = this->getButton();
   return this->getButton(butt, buff);
 }
-
 
 /* Get LED */
 int DarwinLofaro::getLed(int val)
@@ -885,7 +864,6 @@ int DarwinLofaro::read(uint8_t id, uint8_t addr, uint8_t* buff)
 
   return RETURN_OK;
 }
-
 
   /* Set Motor Position */
   int setMotor(int mot, double val)

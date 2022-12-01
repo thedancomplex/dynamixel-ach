@@ -9,13 +9,13 @@
 #include <functional>
 #include <memory>
 #include <string>
-
+#include <vector>
 
 
 class DynamixelAch
 {
   public:
-    DarwinAch();
+    DynamixelAch();
     int cmd(int cmd);
     int cmd(int cmd, bool block);
     int loop();
@@ -48,6 +48,8 @@ class DynamixelAch
     int do_time();
     int do_save_previous_state();
     int m_REF_MODE = MODE_REF;
+    int id_clear();
+    int id_add(int the_id);
 
     int the_mode_state = 0;
     int the_mode_ref   = 0;
@@ -76,9 +78,12 @@ class DynamixelAch
 
     /* Command Time Channel */
     ach_channel_t chan_time;
+
+    /* index vector */
+    std::vector< int16_t > dyn_id;
 };
 
-DarwinAch::DarwinAch()
+DynamixelAch::DynamixelAch()
 {
   /* Zero Data */
   memset(&this->dynamixel_ref,          0, sizeof(this->dynamixel_ref));
@@ -130,14 +135,24 @@ DarwinAch::DarwinAch()
   return;
 }
 
-int DarwinAch::do_time()
+int id_clear()
+{
+  this->dyn_id.clear();
+  return 0;
+}
+int id_add(int the_id)
+{
+  this->dyn_id.push_back(the_id);
+  return 0;
+}
+int DynamixelAch::do_time()
 {
   this->dynamixel_time = this->dl->time();
   ach_put(&this->chan_dynamixel_time,  &this->dynamixel_time,  sizeof(this->dynamixel_time));
   return 0;
 }
 
-int DarwinAch::open()
+int DynamixelAch::open()
 {
   this->dl->setup("/dev/ttyUSB0", true);
   this->dl->sleep(2.0);
@@ -149,19 +164,19 @@ int DarwinAch::open()
   return 0;
 }
 
-int DarwinAch::sleep(double val)
+int DynamixelAch::sleep(double val)
 {
   return this->dl->sleep(val);
 }
 
-int DarwinAch::getState()
+int DynamixelAch::getState()
 {
   size_t fs;
   ach_status_t r = ach_get( &this->chan_dynamixel_state, &this->dynamixel_state, sizeof(this->dynamixel_state), &fs, NULL, ACH_O_LAST );
   return (int)r;
 }
 
-int DarwinAch::do_cmd(int mode)
+int DynamixelAch::do_cmd(int mode)
 {
   size_t fs;
   /* Get the latest cmd channel */
@@ -173,6 +188,18 @@ int DarwinAch::do_cmd(int mode)
   {
     switch (this->dynamixel_cmd.cmd)
     {
+      case DYNAMIXEL_CMD_ID_ADD:
+      {
+        this->id_add(dynamixel_cmd.data[0]);
+        do_return = true;
+        break;
+      } 
+      case DYNAMIXEL_CMD_ID_RESET:
+      {
+        this->id_clear();
+        do_return = true;
+        break;
+      }
       case DYNAMIXEL_CMD_CLOSE:
       {
         this->dl->close();
@@ -341,11 +368,11 @@ int DarwinAch::do_cmd(int mode)
 }
 
 
-int DarwinAch::cmd(int cmd)
+int DynamixelAch::cmd(int cmd)
 {
     return this->cmd(cmd,false);
 }
-int DarwinAch::cmd(int cmd, bool block)
+int DynamixelAch::cmd(int cmd, bool block)
 {
   size_t fs;
   ach_status_t r = ACH_OK;
@@ -364,22 +391,22 @@ int DarwinAch::cmd(int cmd, bool block)
 }
 
 
-int DarwinAch::loop()
+int DynamixelAch::loop()
 {
   return this->loop(HZ_RATE_DEFAULT);
 }
 
-int DarwinAch::loop(double hz)
+int DynamixelAch::loop(double hz)
 {
   return this->loop(hz, HZ_STATE_DEFAULT);
 }
 
-int DarwinAch::loop(double hz, int mode_state)
+int DynamixelAch::loop(double hz, int mode_state)
 {
   return this->loop(hz, mode_state, HZ_REF_DEFAULT);
 }
 
-int DarwinAch::loop(double hz, int mode_state, int mode_ref)
+int DynamixelAch::loop(double hz, int mode_state, int mode_ref)
 {
   int ref = 0;
 
@@ -411,7 +438,7 @@ int DarwinAch::loop(double hz, int mode_state, int mode_ref)
   return ref;
 }
 
-int DarwinAch::do_button()
+int DynamixelAch::do_button()
 {
   try
   {
@@ -461,7 +488,7 @@ int DarwinAch::do_button()
   return 0;
 }
 
-int DarwinAch::button_reset()
+int DynamixelAch::button_reset()
 {
   printf("Button: Resetting System\n");
   this->run_loop = false;
@@ -471,14 +498,14 @@ int DarwinAch::button_reset()
   return 0;
 }
 
-int DarwinAch::button_walking()
+int DynamixelAch::button_walking()
 {
   printf("Button: Turning on Walking\n");
   std::system("dynamixel-ach start walking");
   return 0;
 }
 
-int DarwinAch::button_off()
+int DynamixelAch::button_off()
 {
   printf("Button: Turning off power\n");
   this->run_loop = false;
@@ -486,7 +513,7 @@ int DarwinAch::button_off()
   return 0;
 }
 
-int DarwinAch::button_on()
+int DynamixelAch::button_on()
 {
   printf("Button: Turning on power\n");
   this->dl->on();
@@ -495,20 +522,20 @@ int DarwinAch::button_on()
   return 0;
 }
 
-int DarwinAch::do_save_previous_state()
+int DynamixelAch::do_save_previous_state()
 {
   this->dynamixel_ref_0 = this->dynamixel_ref;
   return 0;
 }
 
 
-int DarwinAch::setDebug(bool val)
+int DynamixelAch::setDebug(bool val)
 {
   debug_flag = val;
   return 0;
 }
 
-int DarwinAch::do_debug()
+int DynamixelAch::do_debug()
 {
   int ret = 0;
   if(this->debug_flag)
@@ -533,18 +560,18 @@ int DarwinAch::do_debug()
 int ft_i = 0;
 int upper_i = 0;
 
-int DarwinAch::main_loop()
+int DynamixelAch::main_loop()
 {
   return this->main_loop(HZ_STATE_DEFAULT);
 }
 
-int DarwinAch::main_loop(int mode_state)
+int DynamixelAch::main_loop(int mode_state)
 {
   if (mode_state >= DYNAMIXEL_HZ_MODE_COUNT) return 1;
   return this->main_loop(mode_state, HZ_REF_DEFAULT);
 }
 
-int DarwinAch::main_loop(int mode_state, int mode_ref)
+int DynamixelAch::main_loop(int mode_state, int mode_ref)
 {
   int ret = 0;
   ret += this->do_cmd(0);
@@ -560,7 +587,7 @@ int DarwinAch::main_loop(int mode_state, int mode_ref)
   return ret;
 }
 
-int DarwinAch::do_gain()
+int DynamixelAch::do_gain()
 {
   int ret = 0;
   for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
@@ -574,7 +601,7 @@ int DarwinAch::do_gain()
 }
 
 
-int DarwinAch::do_ref(int mode)
+int DynamixelAch::do_ref(int mode)
 {
   size_t fs;
   /* Get the latest reference channel */
@@ -589,107 +616,38 @@ int DarwinAch::do_ref(int mode)
 
   switch (move_mode)
   {
-    case MODE_REF:
+    for (int16_t& i: this->dyn_id)
     {
-//      printf("Mode: MODE_REF\n");
-      for( int i = 0; i <= DYNAMIXEL_MOTOR_MAX; i++ )
-      {
-        this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
-        this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
-       this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
-      }
-      break;
+       if( (i <= DYNAMIXEL_MOTOR_MAX) & ( i >= 0) )
+       {
+         this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
+         this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
+         this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
+         ret += this->dl->stageMotor(i);
+       }
     }
-
-    default:
-    {
-//      printf("Mode: MODE_REF (Default)\n");
-      for( int i = 0; i <= DYNAMIXEL_MOTOR_MAX; i++ )
-      {
-        this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
-        this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
-        this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
-      }
-      break;
-    }
+    ret += this->dl->putMotor(); 
   }
 
-  switch (mode)
-  {
-   case HZ_REF_SLOW_TOP:
-   {
-      const int LOWER_START = 7;
-      const int LOWER_END   = 18;
-
-      int upper_array[] = {1,2,3,4,5,6,19,20};
-      int UPPER_LENGTH  = 8;
-
-      /* Set one upper Ref per cycle */
-      upper_i++;
-      if(upper_i >= UPPER_LENGTH) upper_i = 0;
-      ret += this->dl->stageMotor(upper_array[upper_i]);
-
-      /* Always stage lower body */
-      for(int i = LOWER_START; i <= LOWER_END; i++)
-      {
-        ret += this->dl->stageMotor(i);
-      }
-      break;
-    }
-    default: 
-    {
-      ret += this->dl->stageMotor();
-      ret += this->dl->putMotor(); 
-      break;
-    }
-  }
   if( ret > 1 ) ret = 1;
   return ret;
 }
 
 
-int DarwinAch::do_state(int mode)
+int DynamixelAch::do_state(int mode)
 {
   size_t fs;
   int ret = 0;
   /* Get State */
   switch (mode)
   {
-    case HZ_STATE_50_IMU_MOTOR_FT:
+    case HZ_STATE_MOTORS:
     {
-      ret += this->dl->getImu();
-      ret += this->dl->getFt();
-      ret += this->dl->getMotorSlow(1);
+      for (int16_t& i: this->dyn_id)
+      {
+        ret += this->dl->getMotor(i);
+      }
       break;
-    }
-    case HZ_STATE_50_IMU:
-    {
-      ret += this->dl->getImu();
-      break;
-    }
-    case HZ_STATE_125_IMU:
-    {
-      ret += this->dl->getImu();
-      break;
-    }
-    case HZ_STATE_100_IMU_FT_SLOW:
-    {
-      /* Get IMU State */
-      ret += this->dl->getImu();
-
-      /* Get Ft State every other cycle */
-      if(ft_i == 0) ft_i = 1;
-      else ft_i = 0;
-      ret += this->dl->getFt(ft_i);
-      break;
-    }
-    case HZ_STATE_100_IMU_MOTORS_SLOW:
-    {
-      /* Get IMU State */
-      ret += this->dl->getImu();
-
-      /* Get Motor State One per cycle */
-      ret += this->dl->getMotorSlow(1);
     }
     default:
     {

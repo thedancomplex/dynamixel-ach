@@ -1,4 +1,4 @@
-#ifndef DARWIN_DEFINES 
+#ifndef DYNAMIXEL_DEFINES 
 
 typedef enum {
         JOINT_NONE=0,
@@ -22,7 +22,7 @@ typedef enum {
 	LAR=18,
 	NKY=19,
 	NKP=20,
-        DARWIN_JOINT_NAME_COUNT
+        DYNAMIXEL_JOINT_NAME_COUNT
 }__attribute__((packed)) darwin_joint_name_index_t;
 
 
@@ -37,8 +37,8 @@ typedef enum {
 #define DYN_ON                             CM730_ON  
 #define CM730_OFF                          0
 #define DYN_OFF                            CM730_OFF
-#define DARWIN_ON                          CM730_ON
-#define DARWIN_OFF                         CM730_OFF
+#define DYNAMIXEL_ON                          CM730_ON
+#define DYNAMIXEL_OFF                         CM730_OFF
 //  #define IMU_ACC_SCALE 1.0
 #define IMU_ACC_SCALE                      70.67723342939482
 #define IMU_GYRO_SCALE                     500.0
@@ -70,7 +70,7 @@ typedef enum {
 
 // Motor IDs
 #define ID_CM730                           200
-#define ID_DARWIN                          ID_CM730
+#define ID_DYNAMIXEL                          ID_CM730
 #define ID_FT_LEFT                         112
 #define ID_FT_RIGHT                        111
 #define ID_FT                              1000
@@ -153,17 +153,17 @@ typedef enum {
 #define DEVICENAME                         SERIAL_PORT_DEFAULT
 
 
-#define DARWIN_MOTOR_BROADCAST             0Xfe
-#define DARWIN_MOTOR_NUM                   20
-#define DARWIN_MOTOR_MIN                   1
-#define DARWIN_MOTOR_MAX                   20
-#define DARWIN_FT_NUM                      2
-#define DARWIN_MOTOR_MIN_LOWER             7
-#define DARWIN_MOTOR_MAX_LOWER             18
-#define DARWIN_MOTOR_MIN_HEAD              19
-#define DARWIN_MOTOR_MAX_HEAD              20
-#define DARWIN_MOTOR_MIN_UPPER             1
-#define DARWIN_MOTOR_MAX_UPPER             6
+#define DYNAMIXEL_MOTOR_BROADCAST             0Xfe
+#define DYNAMIXEL_MOTOR_NUM                   20
+#define DYNAMIXEL_MOTOR_MIN                   1
+#define DYNAMIXEL_MOTOR_MAX                   254
+#define DYNAMIXEL_FT_NUM                      2
+#define DYNAMIXEL_MOTOR_MIN_LOWER             7
+#define DYNAMIXEL_MOTOR_MAX_LOWER             18
+#define DYNAMIXEL_MOTOR_MIN_HEAD              19
+#define DYNAMIXEL_MOTOR_MAX_HEAD              20
+#define DYNAMIXEL_MOTOR_MIN_UPPER             1
+#define DYNAMIXEL_MOTOR_MAX_UPPER             6
 
 
 #define ERROR                              1
@@ -177,16 +177,16 @@ typedef enum {
 
 #define PROTOCOL_VERSION                   1.0
 
-#define DARWIN_X                           1
-#define DARWIN_Y                           2
-#define DARWIN_Z                           3
+#define DYNAMIXEL_X                           1
+#define DYNAMIXEL_Y                           2
+#define DYNAMIXEL_Z                           3
 
-#define DARWIN_ENUM_P_GAIN                 1
-#define DARWIN_ENUM_I_GAIN                 2
-#define DARWIN_ENUM_D_GAIN                 3
+#define DYNAMIXEL_ENUM_P_GAIN                 1
+#define DYNAMIXEL_ENUM_I_GAIN                 2
+#define DYNAMIXEL_ENUM_D_GAIN                 3
 
-#define DARWIN_BUTTON_START                1
-#define DARWIN_BUTTON_MODE                 0
+#define DYNAMIXEL_BUTTON_START                1
+#define DYNAMIXEL_BUTTON_MODE                 0
 
 #define LED_MODE_0                         0
 #define LED_MODE_1                         1
@@ -196,4 +196,4 @@ typedef enum {
 
 #endif
 
-# define DARWIN_DEFINES 1
+# define DYNAMIXEL_DEFINES 1

@@ -3,32 +3,20 @@
 typedef enum {
         HZ_STATE_NULL,
         HZ_REF_NULL,
-	HZ_STATE_50_IMU_MOTOR_FT,
-	HZ_STATE_50_IMU,
-	HZ_STATE_125_IMU,
-	HZ_STATE_100_IMU_FT_SLOW,
-	HZ_STATE_100_IMU_MOTORS_SLOW,
-	HZ_STATE_200_MOTOR,
-	HZ_REF_SLOW_TOP,
-	HZ_REF_NORMAL,
-	WALKING_START,
-	WALKING_STOP,
-        DARWIN_HZ_MODE_COUNT
-}__attribute__((packed)) darwin_hz_mode_index_t;
+        HZ_STATE_MOTORS,
+        HZ_MODE_COUNT
+}__attribute__((packed)) hz_mode_index_t;
 
 typedef enum {
         MODE_REF = 0,
-        MODE_WALKING,
-	MODE_WALKING_LOWER_ONLY,
-	MODE_WALKING_LOWER_ONLY_STIFF_HIP_PITCH,
         MODE_COUNT
-}__attribute__((packed)) darwin_ach_mode_index_t;
+}__attribute__((packed)) ach_mode_index_t;
 
 typedef enum {
         MODE_BRIDGE_REF,
         MODE_BRIDGE_STATE,
         MODE_BRIDGE_COUNT
-}__attribute__((packed)) darwin_bridge_mode_index_t;
+}__attribute__((packed)) bridge_mode_index_t;
 
 
 

@@ -1,0 +1,665 @@
+#!/bin/bash
+HUMBLE_INSTALL_DIR=~/ros2_humble/
+DEB_VERSION=$(env -i bash -c '. /etc/os-release; echo $VERSION_CODENAME')
+PACKAGE_NAME=dynamixel-legacy
+INSTALL_DIR=/etc/$PACKAGE_NAME
+INCLUDE_DIR=/usr/include/$PACKAGE_NAME
+ROS_BUILD_FILE=do_build.sh
+ROS_RUN_FILE=run_dynamixel_lofaro.sh
+ROS_CLOCK_RUN_FILE=run_dynamixel_clock_lofaro.sh
+
+SYSTEM_ACH_DIR=ctrl_ach
+SYSTEM_ACH_DIR_WALKING=walking
+SYSTEM_ACH_DIR_ON=on
+SYSTEM_ACH_DIR_OFF=off
+SYSTEM_ACH_DIR_SERVER=ctrl_server
+SYSTEM_ACH_DIR_TIMEOUT=ach_timeout
+BIN_NAME_ACH_SERVER=dynamixel-server
+BIN_NAME_ACH_ON=dynamixel-on
+BIN_NAME_ACH_OFF=dynamixel-off
+BIN_NAME_ACH_WALKING=dynamixel-walking
+BIN_NAME_ACH_TIMEOUT=dynamixel-ach-timeout
+DYNAMIXEL_CLOCK_SCREEN_NAME=dynamixel-lofaro-clock
+DYNAMIXEL_SCREEN_NAME=dynamixel-lofaro
+
+DYNAMIXEL_ACH_CHAN_REF='dynamixel-ach-chan-ref'
+DYNAMIXEL_ACH_CHAN_REF_WALKING='dynamixel-ach-chan-ref-walking'
+DYNAMIXEL_ACH_CHAN_STATE='dynamixel-ach-chan-state'
+DYNAMIXEL_ACH_CHAN_CMD='dynamixel-ach-chan-cmd'
+DYNAMIXEL_ACH_CHAN_CMD_RETURN='dynamixel-ach-chan-ret'
+DYNAMIXEL_ACH_CHAN_CMD_VEL='dynamixel-ach-chan-cmd-vel'
+DYNAMIXEL_ACH_CHAN_TIME='dynamixel-ach-chan-time'
+
+DIR_ROS_ACH_BRIDGE=$SYSTEM_ACH_DIR/ros2_ach_bridge/src/build/ros2_ach_bridge/
+BIN_NAME_ROS_ACH_BRIDGE_REF=ros2_ach_bridge
+BIN_NAME_ROS_ACH_BRIDGE_STATE=ros2_ach_bridge_state
+ROS_SORUCE_SCRIPT=source /etc/ros2/install/local_setup.bash
+
+#DYNAMIXEL_IP='10.5.0.249'
+DYNAMIXEL_IP='10.111.111.11'
+
+RosAchBridgeMonitor()
+{
+  source $ROS_SOURCE_SCRIPT
+  DO_EXIT=0
+  while [ 1 -gt $DO_EXIT ]
+  do
+     echo ''
+     echo '-------------------------------------------'
+     echo '------- Starting Dynamixel-Ach to Ros2 -------'
+     echo ' System will auto re-start if not connected'
+     echo '-------------------------------------------'
+     dynamixel-ach stop client
+     dynamixel-ach start client
+     sleep 1
+     RosAchBridgeStart
+
+     cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_TIMEOUT
+     ./$BIN_NAME_ACH_TIMEOUT
+
+     RosAchBridgeStop
+     dynamixel-ach ros rm
+
+     echo ''
+     echo 'Dynamixel-Ach to Ros2 connection timeout'
+     echo 'Restarting in 5 seconds'
+     echo ''
+     sleep 5
+  done
+}
+
+RosAchBridgeStart()
+{
+  echo 'Starting Ros2Ach Bridge for Reference'
+  $INSTALL_DIR/$DIR_ROS_ACH_BRIDGE/$BIN_NAME_ROS_ACH_BRIDGE_REF &
+  echo 'Started Ros2Ach Bridge for Reference'
+  echo 'Starting Ros2Ach Bridge for State'
+  $INSTALL_DIR/$DIR_ROS_ACH_BRIDGE/$BIN_NAME_ROS_ACH_BRIDGE_STATE &
+  echo 'Started Ros2Ach Bridge for State'
+}
+
+RosAchBridgeStop()
+{
+  echo 'Stopping Ros2Ach Bridge for Reference'
+  kill -9 $(pidof $BIN_NAME_ROS_ACH_BRIDGE_REF)
+  echo 'Stoped Ros2Ach Bridge for Reference'
+  echo 'Stopping Ros2Ach Bridge for State'
+  kill -9 $(pidof $BIN_NAME_ROS_ACH_BRIDGE_STATE)
+  echo 'Stopped Ros2Ach Bridge for State'
+}
+
+RosAchBridgeReset()
+{
+	RosAchBridgeStop
+	RosAchBridgeStart
+}
+
+
+DynamixelAchStatus()
+{
+  THE_OUT_HUMAN=''
+  THE_OUT_ROBOT=''
+  case "$2" in
+        'server' )
+		if ps -p $(pidof $BIN_NAME_ACH_SERVER) > /dev/null 2>&1
+		then
+			THE_OUT_HUMAN="Dynamixel Ach Server is Running"
+			THE_OUT_ROBOT=1
+		else
+			THE_OUT_HUMAN="Dynamixel Ach Servers is not Running"
+			THE_OUT_ROBOT=0
+		fi
+        ;;
+
+        'client' )
+		if ps -p $(pidof $BIN_NAME_ACH_CLIENT) > /dev/null 2>&1
+		then
+			THE_OUT_HUMAN="Dynamixel Ach Client is Running"
+			THE_OUT_ROBOT=1
+		else
+			THE_OUT_HUMAN="Dynamixel Ach Client is not Running"
+			THE_OUT_ROBOT=0
+		fi
+        ;;
+
+        'walking' )
+		if ps -p $(pidof $BIN_NAME_ACH_WALKING) > /dev/null 2>&1
+		then
+			THE_OUT_HUMAN="Dynamixel Ach Walking is Running"
+			THE_OUT_ROBOT=1
+		else
+			THE_OUT_HUMAN="Dynamixel Ach Walking is not Running"
+			THE_OUT_ROBOT=0
+		fi
+        ;;
+
+        'remote' )
+		if ps -p $(pidof achd) > /dev/null 2>&1
+		then
+			THE_OUT_HUMAN="Dynamixel Ach Remote is Running"
+			THE_OUT_ROBOT=1
+		else
+			THE_OUT_HUMAN="Dynamixel Ach Remote is not Running"
+			THE_OUT_ROBOT=0
+		fi
+        ;;
+
+
+        * )
+                ShowUsage
+                exit 1
+	;;
+  esac
+
+  case "$1" in
+        '-h' )
+		echo $THE_OUT_HUMAN
+        ;;
+        '-n' )
+                echo $THE_OUT_ROBOT
+        ;;
+
+        * )
+                ShowUsage
+                exit 1
+	;;
+  esac
+}
+
+
+ResetAch()
+{
+  KillAchChannels
+  MakeAch
+}
+
+KillAchChannels()
+{
+  rm /dev/shm/achshm-dynamixel*
+}
+
+KillAch()
+{
+  sudo kill -9 $(pidof achd)
+  KillAchChannels
+}
+
+MakeAch()
+{
+#  ach -1 -C $DYNAMIXEL_ACH_CHAN_REF -m 10 -n 3000
+#  ach -1 -C $DYNAMIXEL_ACH_CHAN_STATE -m 10 -n 3000
+#  ach -1 -C $DYNAMIXEL_ACH_CHAN_CMD -m 10 -n 3000
+#  ach -1 -C $DYNAMIXEL_ACH_CHAN_CMD_RETURN -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_REF -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_REF_WALKING -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_STATE -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_CMD -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_CMD_RETURN -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_CMD_VEL -m 10 -n 3000
+  ach -1 mk $DYNAMIXEL_ACH_CHAN_TIME -m 10 -n 3000
+  chmod 777 /dev/shm/achshm-dynamixel*
+}
+
+AchRemote()
+{
+  MakeAch
+  achd -r push $1 $DYNAMIXEL_ACH_CHAN_REF &
+  achd -r pull $1 $DYNAMIXEL_ACH_CHAN_STATE &
+  achd -r push $1 $DYNAMIXEL_ACH_CHAN_CMD &
+  achd -r pull $1 $DYNAMIXEL_ACH_CHAN_CMD_RETURN &
+  achd -r pull $1 $DYNAMIXEL_ACH_CHAN_CMD_VEL &
+  achd -r pull $1 $DYNAMIXEL_ACH_CHAN_TIME &
+}
+
+
+LowLatency()
+{
+	setserial /dev/ttyUSB0 low_latency
+#	sudo setserial /dev/ttyUSB0 low_latency
+	sync
+#	sudo sync
+	sleep 1
+	echo '---- Low Latency Set ----'
+}
+StatusId()
+{
+	if ! screen -list | grep -q "$DYNAMIXEL_SCREEN_NAME"; then
+		echo 1
+	else 
+		echo 0
+	fi
+}
+
+Status()
+{
+	if ! screen -list | grep -q "$DYNAMIXEL_SCREEN_NAME"; then
+		echo '--- Dynamixel Lofaro Legacy STOPED ---'
+		exit 1
+	else 
+		echo '--- Dynamixel Lofaro Legacy RUNNING ---'
+		exit 0
+	fi
+}
+
+Start()
+{
+  DynamixelLegacyRos2Start
+  DynamixelLegacyClockRos2Start
+}
+
+Stop()
+{
+  DynamixelLegacyClockRos2Stop
+  DynamixelLegacyRos2Stop
+}
+
+DynamixelLegacyRos2Stop()
+{
+	echo '--- Stopping Dynamixel Lofaro Legacy ---'
+	screen -S "$DYNAMIXEL_SCREEN_NAME" -X quit > /dev/null
+	if ! screen -list | grep -q "$DYNAMIXEL_SCREEN_NAME"; then
+		echo '--- Dynamixel Lofaro Legacy Stopped ---'
+	else 
+		echo '--- Dynamixel Lofaro Legacy Failed to Stop ---'
+	fi
+}
+
+
+DynamixelLegacyRos2Start()
+{
+	cd $INSTALL_DIR/ros2
+#	if ! screen -list | grep -q $DYNAMIXEL_SCREEN_NAME; then
+	if ! screen -list | grep -q "$DYNAMIXEL_SCREEN_NAME"; then
+		echo '--- Starting Dynamixel Lofaro Legacy ---'
+		screen -d -m -S $DYNAMIXEL_SCREEN_NAME /bin/bash -c ./$ROS_RUN_FILE
+	else 
+		echo '--- Dynamixel Lofaro Legacy already running ---'
+	fi
+}
+
+DynamixelLegacyClockRos2Start()
+{
+	cd $INSTALL_DIR/ros2
+#	if ! screen -list | grep -q $DYNAMIXEL_CLOCK_SCREEN_NAME; then
+	if ! screen -list | grep -q "$DYNAMIXEL_CLOCK_SCREEN_NAME"; then
+		echo '--- Starting Dynamixel Lofaro Legacy Clock ---'
+		screen -d -m -S $DYNAMIXEL_CLOCK_SCREEN_NAME /bin/bash -c ./$ROS_CLOCK_RUN_FILE
+	else 
+		echo '--- Dynamixel Lofaro Legacy Clock already running ---'
+	fi
+}
+DynamixelLegacyClockRos2Stop()
+{
+	echo '--- Stopping Dynamixel Lofaro Legacy Clock ---'
+	screen -S "$DYNAMIXEL_CLOCK_SCREEN_NAME" -X quit > /dev/null
+	if ! screen -list | grep -q "$DYNAMIXEL_CLOCK_SCREEN_NAME"; then
+		echo '--- Dynamixel Lofaro Legacy Clock Stopped ---'
+	else 
+		echo '--- Dynamixel Lofaro Legacy Clock Failed to Stop ---'
+	fi
+}
+
+DynamixelLegacy()
+{
+	THE_DIR=$(pwd)
+	sudo rm -rf $INSTALL_DIR
+	sudo mkdir -p $INSTALL_DIR
+	echo $INSTALL_DIR
+        sudo cp -r ../include/ $INSTALL_DIR/
+        sudo cp -r ../ros2/ $INSTALL_DIR/
+#	sudo mkdir /etc/rc.local.d
+#	chmod +x dynamixel-legacy.sh
+#	sudo cp dynamixel-legacy.sh /etc/rc.local.d/
+#	echo $INCLUDE_DIR
+#	sudo rm $INCLUDE_DIR
+#        sudo ln -s $INSTALL_DIR/include $INCLUDE_DIR
+
+}
+
+
+DynamixelAchOff()
+{
+  echo 'Turning motor power off' 
+  cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_OFF/
+  ./$BIN_NAME_ACH_OFF
+}
+
+DynamixelAchOffNoWait()
+{
+  echo 'Turning motor power off (no wait mode)' 
+  cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_OFF/
+  ./$BIN_NAME_ACH_OFF no_wait
+}
+
+DynamixelAchOn()
+{ 
+  echo 'Turning motor power on'
+  cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_ON/
+  ./$BIN_NAME_ACH_ON
+}
+
+DynamixelAchOnNoWait()
+{ 
+  echo 'Turning motor power on (no wait mode)'
+  cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_ON/
+  ./$BIN_NAME_ACH_ON no_wait
+}
+
+DynamixelAchPowerNoWait()
+{
+  case "$1" in
+        'on' )
+                DynamixelAchOnNoWait
+        ;;
+        'off' )
+                DynamixelAchOffNoWait 
+        ;;
+
+        * )
+                ShowUsage
+                exit 1
+  esac
+
+}
+
+DynamixelAchPower()
+{
+  case "$1" in
+        'on' )
+                DynamixelAchOn $@
+        ;;
+        'off' )
+                DynamixelAchOff $@
+        ;;
+
+        * )
+                ShowUsage
+                exit 1
+  esac
+
+}
+DynamixelAchServer()
+{
+  case "$1" in
+        'on' )
+                DynamixelAchServerOn $@
+        ;;
+        'off' )
+                DynamixelAchServerOff $@
+        ;;
+
+        * )
+                ShowUsage
+                exit 1
+  esac
+
+}
+
+DynamixelAchServerOn()
+{
+  if ps -p $(pidof $BIN_NAME_ACH_SERVER) > /dev/null 2>&1
+  then
+      echo 'Dynamixel-Ach Server is already running'
+  else
+      echo 'Starting Dynamixel-Ach Server'
+      cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_SERVER/
+      ./$BIN_NAME_ACH_SERVER & 
+      echo ''
+  fi
+}
+
+DynamixelAchServerOff()
+{
+  if ps -p $(pidof $BIN_NAME_ACH_SERVER) > /dev/null 2>&1
+  then
+      echo 'Stopping Dynamixel-Ach Server'
+      kill -9 $(pidof $BIN_NAME_ACH_SERVER) > /dev/null 2>&1
+  else
+      echo 'Dynamixel-Ach Server is already stopped'
+  fi
+}
+
+DynamixelAchWalkingOn()
+{
+  if ps -p $(pidof $BIN_NAME_ACH_WALKING) > /dev/null 2>&1
+  then
+      echo 'Dynamixel-Ach Walking is already running'
+  else
+      echo 'Starting Dynamixel-Ach Walking'
+      cd $INSTALL_DIR/$SYSTEM_ACH_DIR/$SYSTEM_ACH_DIR_WALKING/
+      ./$BIN_NAME_ACH_WALKING & 
+      echo ''
+  fi
+}
+
+DynamixelAchWalkingOff()
+{
+  if ps -p $(pidof $BIN_NAME_ACH_WALKING) > /dev/null 2>&1
+  then
+      echo 'Stopping Dynamixel-Ach Walking'
+      kill -9 $(pidof $BIN_NAME_ACH_WALKING) > /dev/null 2>&1
+  else
+      echo 'Dynamixel-Ach Walking is already stopped'
+  fi
+}
+
+RosClear()
+{
+  rm /dev/shm/fastrtps_*
+  rm /dev/shm/sem.fastrtps_*
+  echo '0'
+}
+
+DynamixelAchWalking()
+{
+  case "$1" in
+        'on' )
+                DynamixelAchWalkingOn $@
+        ;;
+        'off' )
+                DynamixelAchWalkingOff $@
+        ;;
+
+        * )
+                ShowUsage
+                exit 1
+  esac
+
+}
+
+
+
+
+
+ShowUsage()
+{
+	echo 
+	echo '================================================='
+	echo '================================================='
+	echo '============  Dynamixel Lofaro Legacy  ============='
+	echo '============   for the Dynamixel OP    ============='
+	echo '================================================='
+	echo '=============== Daniel M. Lofaro ================'
+	echo '=============== dan@danlofaro.com ==============='
+	echo '================================================='
+	echo '================================================='
+	echo ''
+	echo 'start         : Starts the Dynamixel Lofaro Legacy  '
+	echo '                system and clock                 '
+	echo ''
+	echo 'stop          : Stops the Dynamixel Lofaro Legacy   '
+	echo '                system and clock                 '
+	echo ''
+	echo 'status        : Checks to see if the system is   '
+	echo '                running: Human readable          '
+	echo ''
+	echo 'status-id     : Checks to see if the system is   '
+	echo '                running: 0 = running, 1 = stoped '
+	echo ''
+	echo 'low-latency   : sets serial to low latency mode  '
+	echo ''
+	echo 'start-daemon  : Starts the Dynamixel Lofaro Legacy  '
+	echo '                system                           '
+	echo ''
+	echo 'start-clock   : Starts the Dynamixel Lofaro Legacy  '
+	echo '                clock                            '
+	echo ''
+	echo 'stop-daemon   : Stops the Dynamixel Lofaro Legacy   '
+	echo '                system                           '
+	echo ''
+	echo 'stop-clock    : Stops the Dynamixel Lofaro Legacy   '
+	echo '                clock                            '
+	echo ''
+	echo 'ach-make      : Make ach channels                '
+	echo ''
+	echo 'ach-clear     : Clear and delete ach channels    '
+	echo ''
+	echo 'ach-reset     : Clear and delete ach channels    '
+	echo '                then makes them again            '
+	echo ''
+	echo 'ach-remote    : Start the remote ach daemon      '
+	echo ''
+	echo 'ach-kill      : stops remote connections and     '
+	echo '                removes all ach channels         '
+	echo 'ros-clear     : Clears /dev/shm of ros2          '
+	echo ''
+        echo 'dynamixel-ach-server                                '
+        echo '    on             : Starts Dynamixel-Ach Server    '
+        echo '    off            : Stops Dynamixel-Ach Server     '
+        echo ''
+        echo 'dynamixel-ach-power                                 '
+        echo '    on             : Turns on motors             '
+        echo '    off            : Turns off motors            '
+        echo ''
+        echo 'dynamixel-ach-power-no-wait                         '
+        echo '    on             : Turns on motors             '
+        echo '    off            : Turns off motors            '
+        echo ''
+        echo 'dynamixel-ach-walking                               '
+        echo '    on             : Starts walking process      '
+        echo '    off            : Stops walking process       '
+	echo ''
+	echo 'ros-ach-bridge-start : Starts the ros client on the'
+	echo '                       external/backpack comptuer  '
+	echo 'ros-ach-bridge-stop  : Stops the ros client on the '
+	echo '                       external/backpack comptuer  '
+	echo 'ros-ach-bridge-reset : Resets the ros client on the'
+	echo '                       external/backpack comptuer  '
+	echo 'ros-ach-bridge-monitor : System that automaticall   '
+	echo '                         restarts the ros2ach bridge'
+	echo '                         if there is no connection  '
+	echo '                         Note: this process blocks  '
+	echo ''
+	echo 'dynamixel-ach-status                                '
+	echo '    -n             : Running status of dynamixel-ach'
+	echo '                     numerica 0=stopped 1=running'
+	echo '    -h             : Human readable status of the'
+	echo '                     Dynamixel-ach system           '
+	echo '        server     : Server status               '
+	echo '        client     : Client status               '
+	echo '        walking    : Walking status              '
+	echo '        remote     : Remote status               '
+	echo ''
+	echo
+}
+
+
+case "$1" in
+	'status' )
+		Status $@
+	;;
+	
+	'status-id' )
+		StatusId $@
+	;;
+	
+        'low-latency' )
+		LowLatency $@
+	;;
+	'start' )
+		Start $@
+	;;
+	'start-daemon' )
+		DynamixelLegacyRos2Start $@
+	;;
+	'start-clock' )
+		DynamixelLegacyClockRos2Start $@
+	;;
+	'stop' )
+		Stop $@
+	;;
+	'stop-daemon' )
+		DynamixelLegacyRos2Stop $@
+	;;
+	'stop-clock' )
+		DynamixelLegacyClockRos2Stop $@
+	;;
+
+	'ach-clear' )
+		KillAchChannels $@
+	;;	
+
+	'ach-make' )
+		MakeAch $@
+	;;
+	'ach-reset' )
+		ResetAch $@
+	;;
+
+	'ach-remote' )
+		AchRemote $DYNAMIXEL_IP
+	;;
+
+	'ach-kill' )
+		KillAch
+	;;
+
+        'dynamixel-ach-server' )
+                DynamixelAchServer $2
+        ;;
+
+        'dynamixel-ach-power' )
+                DynamixelAchPower $2
+        ;;
+        
+	'dynamixel-ach-power-no-wait' )
+                DynamixelAchPowerNoWait $2
+        ;;
+
+        'dynamixel-ach-walking' )
+                DynamixelAchWalking $2
+        ;;
+
+	'ros-ach-bridge-start' )
+		RosAchBridgeStart
+	;;
+	
+	'ros-ach-bridge-stop' )
+		RosAchBridgeStop
+	;;
+
+	'ros-ach-bridge-reset' )
+		RosAchBridgeReset
+	;;
+
+	'ros-ach-bridge-monitor' )
+		RosAchBridgeMonitor
+	;;
+
+	'dynamixel-ach-status' )
+		DynamixelAchStatus $2 $3
+	;;
+
+	'ros-clear' )
+		RosClear
+	;;
+	
+	* )
+		ShowUsage
+		exit 1
+esac
+
+exit 0
+
+
+

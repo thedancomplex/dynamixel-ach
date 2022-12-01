@@ -1,4 +1,4 @@
-#ifndef DARWIN_TYPES
+#ifndef DYNAMIXEL_TYPES
 #include "lofaro_types.h"
 #endif
 
@@ -10,10 +10,10 @@
 //#include "/usr/local/include/dynamixel_sdk/dynamixel_sdk.h"
 
 
-class DarwinLofaro
+class DynamixelLofaro
 {
   public:
-    DarwinLofaro();
+    DynamixelLofaro();
 
     /* Setup system with default values */
     int setup();
@@ -81,7 +81,7 @@ class DarwinLofaro
     int stop();
 
     /* State and Reference Data */
-    darwin_data_def_t darwin_data;
+    dynamixel_data_def_t dynamixel_data;
 
     /* set the rate for the auto sleeping timer */
     int rate(double hz);

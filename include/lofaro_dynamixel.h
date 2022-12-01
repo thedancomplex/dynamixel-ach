@@ -18,15 +18,8 @@
 //#include "lofaro_darwin_ach.h"
 //#endif
 
-#ifdef DARWIN_LOFARO_DAN
-#include "lofaro_darwin_dan.h"
-#endif
+#include "lofaro_dynamixel_class.h"
 
-#include "lofaro_darwin_class.h"
-
-//#ifdef DARWIN_LOFARO_DYN
-#ifndef DARWIN_LOFARO_DAN
-#include "lofaro_darwin_methods_dyn.h"
-#endif
+#include "lofaro_dynamixel_methods_dyn.h"
 
 

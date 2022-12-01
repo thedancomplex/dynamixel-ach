@@ -154,7 +154,7 @@ typedef enum {
 
 
 #define DYNAMIXEL_MOTOR_BROADCAST             0Xfe
-#define DYNAMIXEL_MOTOR_NUM                   20
+#define DYNAMIXEL_MOTOR_NUM                   254
 #define DYNAMIXEL_MOTOR_MIN                   1
 #define DYNAMIXEL_MOTOR_MAX                   254
 #define DYNAMIXEL_FT_NUM                      2

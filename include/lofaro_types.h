@@ -1,10 +1,10 @@
 
-#ifndef DARWIN_DEFINES
+#ifndef DYNAMIXEL_DEFINES
 #include "lofaro_defines.h"
 #endif
 
 
-#ifndef DARWIN_TYPES
+#ifndef DYNAMIXEL_TYPES
 #include <stdint.h>
 
 typedef struct imu_state_def {
@@ -48,40 +48,40 @@ typedef struct motor_ref_def {
 //        double voltage;
 }__attribute__((packed)) motor_ref_def_t;
 
-typedef struct darwin_cmd_def {
+typedef struct dynamixel_cmd_def {
         int16_t cmd;
         int16_t data[4];
         double  data_float[4];
-}__attribute__((packed)) darwin_cmd_def_t;
+}__attribute__((packed)) dynamixel_cmd_def_t;
 
-typedef struct darwin_vec3_def {
+typedef struct dynamixel_vec3_def {
         double x;
         double y;
         double z;
-}__attribute__((packed)) darwin_vec3_def_t;
+}__attribute__((packed)) dynamixel_vec3_def_t;
 
-typedef struct darwin_twist_def {
-        darwin_vec3_def_t linear;
-        darwin_vec3_def_t angular;
+typedef struct dynamixel_twist_def {
+        dynamixel_vec3_def_t linear;
+        dynamixel_vec3_def_t angular;
         int16_t           cmd;
-}__attribute__((packed)) darwin_twist_def_t;
+}__attribute__((packed)) dynamixel_twist_def_t;
 
 
 
-typedef struct darwin_data_def {
-  motor_ref_def_t     motor_ref[DARWIN_MOTOR_NUM+1];
-  motor_state_def_t   motor_state[DARWIN_MOTOR_NUM+1];
+typedef struct dynamixel_data_def {
+  motor_ref_def_t     motor_ref[DYNAMIXEL_MOTOR_NUM+1];
+  motor_state_def_t   motor_state[DYNAMIXEL_MOTOR_NUM+1];
   imu_state_def_t     imu;
-  ft_state_def_t      ft[DARWIN_FT_NUM];
+  ft_state_def_t      ft[DYNAMIXEL_FT_NUM];
   int16_t             mode;
-  darwin_twist_def_t  cmd_vel;
-}__attribute__((packed)) darwin_data_def_t;
+  dynamixel_twist_def_t  cmd_vel;
+}__attribute__((packed)) dynamixel_data_def_t;
 
-typedef struct darwin_cmd_vel_def {
+typedef struct dynamixel_cmd_vel_def {
   int16_t             mode;
-  darwin_vec3_def_t linear;
-  darwin_vec3_def_t angular;
-}__attribute__((packed)) darwin_cmd_vel_def_t;
+  dynamixel_vec3_def_t linear;
+  dynamixel_vec3_def_t angular;
+}__attribute__((packed)) dynamixel_cmd_vel_def_t;
 
 #endif
-#define DARWIN_TYPES 1	
+#define DYNAMIXEL_TYPES 1	

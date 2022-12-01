@@ -57,7 +57,7 @@ class DynamixelAch
     /* Led State */
     uint8_t led_mode = LED_MODE_0;
 
-    DarwinLofaro* dl = new DarwinLofaro();
+    DynamixelLofaro* dl = new DynamixelLofaro();
 
     /* Data types */
     dynamixel_data_def_t dynamixel_ref_0;
@@ -65,19 +65,19 @@ class DynamixelAch
     bool run_loop = false;
     bool debug_flag = false;
     /* Reference Channel */
-    ach_channel_t chan_ref;  
+    ach_channel_t chan_dynamixel_ref;  
 
     /* State Feedback Channel */
-    ach_channel_t chan_state;
+    ach_channel_t chan_dynamixel_state;
 
     /* Command channel */
-    ach_channel_t chan_cmd;
+    ach_channel_t chan_dynamixel_cmd;
 
     /* Command Channel Return */
-    ach_channel_t chan_cmd_return;
+    ach_channel_t chan_dynamixel_cmd_return;
 
     /* Command Time Channel */
-    ach_channel_t chan_time;
+    ach_channel_t chan_dynamixel_time;
 
     /* index vector */
     std::vector< int16_t > dyn_id;
@@ -245,71 +245,11 @@ int DynamixelAch::do_cmd(int mode)
       case DYNAMIXEL_CMD_LOOP_MODE:
       {
         int d0 = this->dynamixel_cmd.data[0];
-        if( d0 == HZ_STATE_50_IMU_MOTOR_FT )
+        if( d0 == HZ_STATE_MOTORS )
         { 
           this->the_mode_state = d0;
-          this->dl->rate(50.0);
-          printf("Set HZ_STATE_50_IMU_MOTOR_FT\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_STATE_50_IMU )
-        { 
-          this->the_mode_state = d0;
-          this->dl->rate(50.0);
-          printf("Set HZ_STATE_50_IMU\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_STATE_200_MOTOR )
-        { 
-          this->the_mode_state = d0;
-          this->dl->rate(200.0);
-          printf("Set HZ_STATE_200_MOTOR\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_STATE_125_IMU )
-        { 
-          this->the_mode_state = d0;
-          this->dl->rate(125.0);
-          printf("Set HZ_STATE_125_IMU\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_STATE_100_IMU_FT_SLOW )
-        { 
-          this->the_mode_state = d0;
-          this->dl->rate(100.0);
-          printf("Set HZ_STATE_100_IMU_FT_SLOW\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_STATE_100_IMU_MOTORS_SLOW )
-        { 
-          this->the_mode_state = d0;
-          this->dl->rate(100.0);
-          printf("Set HZ_STATE_100_IMU_MOTORS_SLOW\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_STATE_DEFAULT )
-        { 
-          this->the_mode_state = d0;
-          this->dl->rate(100.0);
-          printf("Set HZ_STATE_DEFAULT\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_REF_SLOW_TOP )
-        { 
-          this->the_mode_ref = d0;
-          printf("Set HZ_REF_SLOW_TOP\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_REF_NORMAL )
-        { 
-          this->the_mode_ref = d0;
-          printf("Set HZ_REF_NORMAL\n");
-          do_return = true; 
-        }
-        else if( d0 == HZ_REF_DEFAULT )
-        { 
-          this->the_mode_ref = d0;
-          printf("Set HZ_REF_DEFAULT\n");
+          //this->dl->rate(200.0);
+          printf("Set HZ_STATE_MOTOR\n");
           do_return = true; 
         }
         break;
@@ -321,18 +261,6 @@ int DynamixelAch::do_cmd(int mode)
         { 
           m_REF_MODE = d0;                   
           printf("Set MODE_REF\n");
-          do_return = true; 
-        }
-        else if( d0 == MODE_WALKING )
-        { 
-          m_REF_MODE = d0;            
-          printf("Set MODE_WALKING\n");
-          do_return = true; 
-        }
-        else if( d0 == MODE_WALKING_LOWER_ONLY )
-        { 
-          m_REF_MODE = d0; 
-          printf("Set MODE_WALKING_LOWER_ONLY\n");
           do_return = true; 
         }
         else
@@ -423,7 +351,8 @@ int DynamixelAch::loop(double hz, int mode_state, int mode_ref)
     this->do_debug();
     this->do_save_previous_state();
 
-    this->do_button();
+/* No button */
+//    this->do_button();
 
     /* Update the Mode if needed */
     mode_state = this->the_mode_state;
@@ -436,56 +365,8 @@ int DynamixelAch::loop(double hz, int mode_state, int mode_ref)
   return ref;
 }
 
-int DynamixelAch::do_button()
-{
-  try
-  {
-    uint8_t buff = this->dl->getButton();
-    int button_mode  = this->dl->getButton(DYNAMIXEL_BUTTON_MODE,  buff);
-    int button_start = this->dl->getButton(DYNAMIXEL_BUTTON_START, buff);
 
-    /* Debounce */
-    int button_mode_pressed  = 0;
-    int button_start_pressed = 0;
-    if( (button_mode  == 0) & (button_mode_0  == 1) ) button_mode_pressed  = 1;
-    if( (button_start == 0) & (button_start_0 == 1) ) button_start_pressed = 1;
-
-    /* Progress Buttons */
-    if(button_mode_pressed == 1)
-    {
-      uint8_t the_mode = 0;
-      if     (this->led_mode == LED_MODE_0) this->led_mode = LED_MODE_1;
-      else if(this->led_mode == LED_MODE_1) this->led_mode = LED_MODE_2;
-      else if(this->led_mode == LED_MODE_2) this->led_mode = LED_MODE_3;
-      else if(this->led_mode == LED_MODE_3) this->led_mode = LED_MODE_0;
-      else                                  this->led_mode = LED_MODE_0;
-      the_mode = this->led_mode;
-      uint8_t b = 1;
-      b = b << the_mode;
-      if(the_mode == LED_MODE_3) b = 7;
-      this->dl->setLed(b);   
-    }
-
-    if(button_start_pressed)
-    {
-      if     (this->led_mode == LED_MODE_0)  this->button_on();
-      else if(this->led_mode == LED_MODE_1)  this->button_walking();
-      else if(this->led_mode == LED_MODE_2)  this->button_off();
-      else if(this->led_mode == LED_MODE_3)  this->button_reset();
-      else return 1;
-    }
-
-    this->button_mode_0  = button_mode;
-    this->button_start_0 = button_start;
-  }
-  catch(...)
-  {
-    return 1;
-  }
-
-  return 0;
-}
-
+/*
 int DynamixelAch::button_reset()
 {
   printf("Button: Resetting System\n");
@@ -493,13 +374,6 @@ int DynamixelAch::button_reset()
   this->dl->off();
   std::system("dynamixel-ach stop walking");
   std::system("dynamixel-ach stop server no_wait");
-  return 0;
-}
-
-int DynamixelAch::button_walking()
-{
-  printf("Button: Turning on Walking\n");
-  std::system("dynamixel-ach start walking");
   return 0;
 }
 
@@ -519,6 +393,7 @@ int DynamixelAch::button_on()
   this->run_loop = true;
   return 0;
 }
+*/
 
 int DynamixelAch::do_save_previous_state()
 {
@@ -565,7 +440,7 @@ int DynamixelAch::main_loop()
 
 int DynamixelAch::main_loop(int mode_state)
 {
-  if (mode_state >= DYNAMIXEL_HZ_MODE_COUNT) return 1;
+  if (mode_state >= HZ_MODE_COUNT) return 1;
   return this->main_loop(mode_state, HZ_REF_DEFAULT);
 }
 
@@ -605,7 +480,6 @@ int DynamixelAch::do_ref(int mode)
   /* Get the latest reference channel */
   ach_status_t r = ACH_OK;
   r = ach_get( &this->chan_dynamixel_ref,         &this->dynamixel_ref,         sizeof(this->dynamixel_ref),         &fs, NULL, ACH_O_LAST );
-  r = ach_get( &this->chan_dynamixel_ref_walking, &this->dynamixel_ref_walking, sizeof(this->dynamixel_ref_walking), &fs, NULL, ACH_O_LAST );
 
   int ret = 0;
   /* Set Reference Here */

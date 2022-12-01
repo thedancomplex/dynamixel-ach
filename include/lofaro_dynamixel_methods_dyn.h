@@ -1,4 +1,4 @@
-#define DARWIN_METHODS_DYN 1
+#define DYNAMIXEL_METHODS_DYN 1
 
 #include "dynamixel_sdk/dynamixel_sdk.h"
 //#include "/usr/local/include/dynamixel_sdk/dynamixel_sdk.h"
@@ -19,22 +19,22 @@ dynamixel::GroupBulkRead groupBulkReadFt(     portHandler, packetHandler);
 dynamixel::GroupBulkRead groupBulkReadMotor(  portHandler, packetHandler);
 
 /* init */
-DarwinLofaro::DarwinLofaro()
+DynamixelLofaro::DynamixelLofaro()
 {
 //  portHandler   = dynamixel::PortHandler::getPortHandler(DEVICENAME);
 
 //  packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
-  memset(&this->darwin_data, 0, sizeof(this->darwin_data));
-  for( int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++ )
+  memset(&this->dynamixel_data, 0, sizeof(this->dynamixel_data));
+  for( int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++ )
   {
-    this->darwin_data.motor_ref[i].torque = MOTOR_TORQUE_MAX;
+    this->dynamixel_data.motor_ref[i].torque = MOTOR_TORQUE_MAX;
   }
   return;
 }
 
 /* Open Port */
-int DarwinLofaro::open()
+int DynamixelLofaro::open()
 {
   std::string str  = SERIAL_PORT_DEFAULT;
   char *cstr = new char[str.length() + 1];
@@ -45,7 +45,7 @@ int DarwinLofaro::open()
 }
 
 /* Open Port and change port number */
-int DarwinLofaro::open(const char *port)
+int DynamixelLofaro::open(const char *port)
 {
  try
  {
@@ -82,7 +82,7 @@ int DarwinLofaro::open(const char *port)
 }
 
 /* Setup system with default values */
-int DarwinLofaro::setup()
+int DynamixelLofaro::setup()
 {
   std::string str  = SERIAL_PORT_DEFAULT;
   char *cstr = new char[str.length() + 1];
@@ -92,7 +92,7 @@ int DarwinLofaro::setup()
   return ret;
 }
 
-int DarwinLofaro::setup(std::string str)
+int DynamixelLofaro::setup(std::string str)
 {
   char *cstr = new char[str.length() + 1];
   strcpy(cstr, str.c_str());
@@ -102,13 +102,13 @@ int DarwinLofaro::setup(std::string str)
 }
 
 /* Setup system with optional port */
-int DarwinLofaro::setup(const char *port)
+int DynamixelLofaro::setup(const char *port)
 {
   return this->setup(port, SERIAL_PORT_LOW_LATENCY_DEFAULT);
 }
 
 /* Setup system with low latency flag */
-int DarwinLofaro::setup(bool low_latency)
+int DynamixelLofaro::setup(bool low_latency)
 {
   std::string str  = SERIAL_PORT_DEFAULT;
   char *cstr = new char[str.length() + 1];
@@ -118,7 +118,7 @@ int DarwinLofaro::setup(bool low_latency)
   return ret;
 }
 
-int DarwinLofaro::setup(std::string str, bool low_latency)
+int DynamixelLofaro::setup(std::string str, bool low_latency)
 {
   char *cstr = new char[str.length() + 1];
   strcpy(cstr, str.c_str());
@@ -128,7 +128,7 @@ int DarwinLofaro::setup(std::string str, bool low_latency)
 }
 
 /* Setup system with optional port and low latency flag */
-int DarwinLofaro::setup(const char *port, bool low_latency)
+int DynamixelLofaro::setup(const char *port, bool low_latency)
 {
   this->open(port);
   this->setLowLatency(port, low_latency);
@@ -136,7 +136,7 @@ int DarwinLofaro::setup(const char *port, bool low_latency)
 }
 
 /* Sets low-latency for serial port */
-int DarwinLofaro::setLowLatency(const char* the_serial_port, bool low_latency)
+int DynamixelLofaro::setLowLatency(const char* the_serial_port, bool low_latency)
 {
   if( low_latency )
   {
@@ -154,7 +154,7 @@ int DarwinLofaro::setLowLatency(const char* the_serial_port, bool low_latency)
 }
 
 /* Get IMU State */
-int DarwinLofaro::getImu()
+int DynamixelLofaro::getImu()
 {
   // dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
   bool dxl_addparam_result = false;               // addParam result
@@ -191,19 +191,19 @@ int DarwinLofaro::getImu()
   uint16_t buff_acc_z   = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_ACC_Z, 2);
   uint8_t  buff_voltage = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_VOLTAGE, 1);
 
-  this->darwin_data.imu.gyro_x  = this->int2double(buff_gyro_x) * IMU_GYRO_SCALE;
-  this->darwin_data.imu.gyro_y  = this->int2double(buff_gyro_y) * IMU_GYRO_SCALE;
-  this->darwin_data.imu.gyro_z  = this->int2double(buff_gyro_z) * IMU_GYRO_SCALE;
-  this->darwin_data.imu.acc_x   = this->int2double(buff_acc_x)  * IMU_ACC_SCALE;
-  this->darwin_data.imu.acc_y   = this->int2double(buff_acc_y)  * IMU_ACC_SCALE;
-  this->darwin_data.imu.acc_z   = this->int2double(buff_acc_z)  * IMU_ACC_SCALE;
-  this->darwin_data.imu.voltage = (double)buff_voltage    / VOLTAGE_SCALE;
+  this->dynamixel_data.imu.gyro_x  = this->int2double(buff_gyro_x) * IMU_GYRO_SCALE;
+  this->dynamixel_data.imu.gyro_y  = this->int2double(buff_gyro_y) * IMU_GYRO_SCALE;
+  this->dynamixel_data.imu.gyro_z  = this->int2double(buff_gyro_z) * IMU_GYRO_SCALE;
+  this->dynamixel_data.imu.acc_x   = this->int2double(buff_acc_x)  * IMU_ACC_SCALE;
+  this->dynamixel_data.imu.acc_y   = this->int2double(buff_acc_y)  * IMU_ACC_SCALE;
+  this->dynamixel_data.imu.acc_z   = this->int2double(buff_acc_z)  * IMU_ACC_SCALE;
+  this->dynamixel_data.imu.voltage = (double)buff_voltage    / VOLTAGE_SCALE;
  
   return RETURN_OK;
 }
 
 /* Turn on all */
-int DarwinLofaro::on()
+int DynamixelLofaro::on()
 {
   int ret = 0;
   ret += this->on(ID_CM730);
@@ -212,7 +212,7 @@ int DarwinLofaro::on()
   this->lut->sleep(0.1);
   ret += this->on(ID_FT_LEFT);
   this->lut->sleep(0.1);
-  for(int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++)
+  for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
   {
     ret += this->on(i);
     this->lut->sleep(0.05);
@@ -221,7 +221,7 @@ int DarwinLofaro::on()
   return RETURN_OK;
 }
 
-int DarwinLofaro::write(uint8_t id, uint8_t addr, uint8_t d0)
+int DynamixelLofaro::write(uint8_t id, uint8_t addr, uint8_t d0)
 {
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
     uint8_t dxl_error = 0;                          // Dynamixel error
@@ -247,7 +247,7 @@ int DarwinLofaro::write(uint8_t id, uint8_t addr, uint8_t d0)
     return RETURN_OK;;
 }
 
-int DarwinLofaro::on(int id)
+int DynamixelLofaro::on(int id)
 {
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
     uint8_t dxl_error = 0;                          // Dynamixel error
@@ -273,12 +273,12 @@ int DarwinLofaro::on(int id)
     return RETURN_OK;;
 }
 
-int DarwinLofaro::sleep(double val)
+int DynamixelLofaro::sleep(double val)
 {
   return this->lut->sleep(val);
 }
 
-int DarwinLofaro::write(uint8_t *txpacket)
+int DynamixelLofaro::write(uint8_t *txpacket)
 {
 
   int ret = packetHandler->txPacket(portHandler, txpacket);
@@ -287,7 +287,7 @@ int DarwinLofaro::write(uint8_t *txpacket)
 }
 
 /* Turn off all */
-int DarwinLofaro::off()
+int DynamixelLofaro::off()
 {
   int ret = 0;
   ret += this->off(ID_CM730);
@@ -296,7 +296,7 @@ int DarwinLofaro::off()
   this->lut->sleep(0.1);
   ret += this->off(ID_FT_LEFT);
   this->lut->sleep(0.1);
-  for(int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++)
+  for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
   {
     ret += this->off(i);
     this->lut->sleep(0.05);
@@ -306,7 +306,7 @@ int DarwinLofaro::off()
 }
 
 /* Turn off "id" */
-int DarwinLofaro::off(int id)
+int DynamixelLofaro::off(int id)
 {
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
     uint8_t dxl_error = 0;                          // Dynamixel error
@@ -332,14 +332,14 @@ int DarwinLofaro::off(int id)
     return RETURN_OK;
 }
 
-double DarwinLofaro::int2double(uint16_t val)
+double DynamixelLofaro::int2double(uint16_t val)
 {
   double the_out = (double)((int32_t)val - 512) / 1023.0;
   return the_out;
 }
 
 /* Stops and turns off everything */
-int DarwinLofaro::stop()
+int DynamixelLofaro::stop()
 {
   int ret = off();
   ret += close();
@@ -348,7 +348,7 @@ int DarwinLofaro::stop()
 }
 
 /* Closes port */
-int DarwinLofaro::close()
+int DynamixelLofaro::close()
 {
   // Close port
   portHandler->closePort();
@@ -356,23 +356,23 @@ int DarwinLofaro::close()
 }
 
 
-int DarwinLofaro::sleep()
+int DynamixelLofaro::sleep()
 {
   return this->lut->sleep();
 }
 
-int DarwinLofaro::rate(double hz)
+int DynamixelLofaro::rate(double hz)
 {
   return this->lut->rate(hz);
 }
 
-double DarwinLofaro::time()
+double DynamixelLofaro::time()
 {
   return this->lut->getTime();
 }
 
 /* Get Left and Right FT states */
-int DarwinLofaro::getFt()
+int DynamixelLofaro::getFt()
 { 
   int ret = getFt(ID_FT_LEFT);
   ret    += getFt(ID_FT_RIGHT);
@@ -381,7 +381,7 @@ int DarwinLofaro::getFt()
 }
 
 /* FT specific char 2 double */
-double DarwinLofaro::ft_char2double(uint8_t val, int* err)
+double DynamixelLofaro::ft_char2double(uint8_t val, int* err)
 {
     if( val == 255)
     {
@@ -395,7 +395,7 @@ double DarwinLofaro::ft_char2double(uint8_t val, int* err)
 }
 
 /* Get "id" FT state */
-int DarwinLofaro::getFt(int id)
+int DynamixelLofaro::getFt(int id)
 { 
 //  dynamixel::GroupBulkRead groupBulkReadFt(portHandler, packetHandler);
 
@@ -436,26 +436,26 @@ int DarwinLofaro::getFt(int id)
   uint16_t buff_fsr_y    = groupBulkReadFt.getData(id, FT_ADDRESS_FSR_Y, 2);
   uint8_t  buff_voltage  = groupBulkReadFt.getData(id, FT_ADDRESS_VOLTAGE, 1);
 
-  this->darwin_data.ft[the_index].s0   = this->int2double(buff_s1)  * FT_SCALE;
-  this->darwin_data.ft[the_index].s1   = this->int2double(buff_s2)  * FT_SCALE;
-  this->darwin_data.ft[the_index].s2   = this->int2double(buff_s3)  * FT_SCALE;
-  this->darwin_data.ft[the_index].s3   = this->int2double(buff_s4)  * FT_SCALE;
+  this->dynamixel_data.ft[the_index].s0   = this->int2double(buff_s1)  * FT_SCALE;
+  this->dynamixel_data.ft[the_index].s1   = this->int2double(buff_s2)  * FT_SCALE;
+  this->dynamixel_data.ft[the_index].s2   = this->int2double(buff_s3)  * FT_SCALE;
+  this->dynamixel_data.ft[the_index].s3   = this->int2double(buff_s4)  * FT_SCALE;
 
   int ft_fsr_raised_x = 0;
   int ft_fsr_raised_y = 0;
 
-  this->darwin_data.ft[the_index].x    = this->ft_char2double(buff_fsr_x, &ft_fsr_raised_x) * FSR_SCALE_X;
-  this->darwin_data.ft[the_index].y    = this->ft_char2double(buff_fsr_y, &ft_fsr_raised_y) * FSR_SCALE_Y;
+  this->dynamixel_data.ft[the_index].x    = this->ft_char2double(buff_fsr_x, &ft_fsr_raised_x) * FSR_SCALE_X;
+  this->dynamixel_data.ft[the_index].y    = this->ft_char2double(buff_fsr_y, &ft_fsr_raised_y) * FSR_SCALE_Y;
 
-  this->darwin_data.ft[the_index].raised_x = ft_fsr_raised_x;
-  this->darwin_data.ft[the_index].raised_y = ft_fsr_raised_y;
+  this->dynamixel_data.ft[the_index].raised_x = ft_fsr_raised_x;
+  this->dynamixel_data.ft[the_index].raised_y = ft_fsr_raised_y;
    
-  this->darwin_data.ft[the_index].voltage  = (double)buff_voltage / VOLTAGE_SCALE;
+  this->dynamixel_data.ft[the_index].voltage  = (double)buff_voltage / VOLTAGE_SCALE;
 
 return RETURN_OK; 
 }
 
-uint16_t DarwinLofaro::double2uint16(double val)
+uint16_t DynamixelLofaro::double2uint16(double val)
 {
   uint16_t the_out = 0;
 
@@ -467,45 +467,45 @@ uint16_t DarwinLofaro::double2uint16(double val)
   return the_out;
 }
 
-int DarwinLofaro::setMotPos(int mot, double val)
+int DynamixelLofaro::setMotPos(int mot, double val)
 {
   /* Sets the motor desired position in rad */
-  if( ( mot > DARWIN_MOTOR_MAX ) | ( mot < DARWIN_MOTOR_MIN ) ) return RETURN_FAIL;
+  if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
   int id = mot;
 
-  this->darwin_data.motor_ref[id].pos = val;
+  this->dynamixel_data.motor_ref[id].pos = val;
   return RETURN_OK;
 }
 
-int DarwinLofaro::setMotTorque(int mot, double val)
+int DynamixelLofaro::setMotTorque(int mot, double val)
 {
   /* Sets the motor desired max load in percentage */
-  if( ( mot > DARWIN_MOTOR_MAX ) | ( mot < DARWIN_MOTOR_MIN ) ) return RETURN_FAIL;
+  if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
   int id = mot;
 
   if(val < 0) return RETURN_FAIL;
 
-  this->darwin_data.motor_ref[id].torque = val;
+  this->dynamixel_data.motor_ref[id].torque = val;
   return RETURN_OK;
 }
 
-int DarwinLofaro::setMotSpeed(int mot, double val)
+int DynamixelLofaro::setMotSpeed(int mot, double val)
 {
   /* Sets the motor desired speed in rad/sec */
-  if( ( mot > DARWIN_MOTOR_MAX ) | ( mot < DARWIN_MOTOR_MIN ) ) return RETURN_FAIL;
+  if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
   int id = mot;
 
   if(val < 0) return RETURN_FAIL;
 
-  this->darwin_data.motor_ref[id].speed = val;
+  this->dynamixel_data.motor_ref[id].speed = val;
   return RETURN_OK;
 }
 
-int DarwinLofaro::stageMotor()
+int DynamixelLofaro::stageMotor()
 {
   /* Stage all motor positions torques and speeds */
   int ret = 0;
-  for (int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++)
+  for (int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
   {
     ret += this->stageMotor(i);
   }
@@ -515,20 +515,20 @@ int DarwinLofaro::stageMotor()
 }
 
 /* Stage Motor Position */
-int DarwinLofaro::stageMotor(int mot)
+int DynamixelLofaro::stageMotor(int mot)
 {
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
     uint8_t dxl_error = 0;                          // Dynamixel error
 
-    if( ( mot > DARWIN_MOTOR_MAX ) | ( mot < DARWIN_MOTOR_MIN ) ) return RETURN_FAIL;
+    if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
 
     uint8_t  id = (uint8_t)mot;
     uint8_t  address = MX_ADDRESS_REF_START;
     uint8_t  length  = MX_ADDRESS_REF_LENGTH;
-    uint16_t pos     = this->double2uint16(this->darwin_data.motor_ref[id].pos);    
-    double   vel_d   = (this->darwin_data.motor_ref[id].speed * MOTOR_REF_SPEED_SCALE);
+    uint16_t pos     = this->double2uint16(this->dynamixel_data.motor_ref[id].pos);    
+    double   vel_d   = (this->dynamixel_data.motor_ref[id].speed * MOTOR_REF_SPEED_SCALE);
     uint16_t vel     = (uint16_t) (vel_d);
-    double   tor_d   = (this->darwin_data.motor_ref[id].torque * 0x3ff);
+    double   tor_d   = (this->dynamixel_data.motor_ref[id].torque * 0x3ff);
     uint16_t tor     = (uint16_t)(tor_d);
 
     if ( vel > 0x3ff ) vel = 0;
@@ -600,13 +600,13 @@ int DarwinLofaro::stageMotor(int mot)
 }
 
 /* Send staged motor positions to all motors */
-int DarwinLofaro::putMotor()
+int DynamixelLofaro::putMotor()
 {
   return this->putMotor(ID_ALL); 
 }
 
 /* Send staged motor positions to motor "mot" */
-int DarwinLofaro::putMotor(int mot)
+int DynamixelLofaro::putMotor(int mot)
 {
   int dxl_comm_result = COMM_TX_FAIL;             // Communication result
 
@@ -625,9 +625,9 @@ int DarwinLofaro::putMotor(int mot)
 }
 
 
-int gms_i   = DARWIN_MOTOR_MIN;
+int gms_i   = DYNAMIXEL_MOTOR_MIN;
 int gms_val = 0;
-int DarwinLofaro::getMotorSlow(int val)
+int DynamixelLofaro::getMotorSlow(int val)
 {
   /* Stage all motor positions torques and speeds */
   if(gms_val >= val) gms_val = 0;
@@ -635,7 +635,7 @@ int DarwinLofaro::getMotorSlow(int val)
   if (gms_val == 0)
   {
     gms_i++;
-    if( gms_i > DARWIN_MOTOR_MAX ) gms_i = DARWIN_MOTOR_MIN;
+    if( gms_i > DYNAMIXEL_MOTOR_MAX ) gms_i = DYNAMIXEL_MOTOR_MIN;
     gms_val++;
     return this->getMotor(gms_i);
   }
@@ -643,11 +643,11 @@ int DarwinLofaro::getMotorSlow(int val)
   return RETURN_FAIL;
 }
 
-int DarwinLofaro::getMotor()
+int DynamixelLofaro::getMotor()
 {
   /* Stage all motor positions torques and speeds */
   int ret = 0;
-  for (int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++)
+  for (int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
   {
     ret += this->getMotor(i);
   }
@@ -657,7 +657,7 @@ int DarwinLofaro::getMotor()
 }
 
 /* Get Motor State */
-int DarwinLofaro::getMotor(int id)
+int DynamixelLofaro::getMotor(int id)
 {
   // dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
   bool dxl_addparam_result = false;               // addParam result
@@ -691,30 +691,30 @@ int DarwinLofaro::getMotor(int id)
   uint8_t  buff_voltage   = groupBulkReadMotor.getData(id, MX_ADDRESS_VOLTAGE, 1);
   uint8_t  buff_temp      = groupBulkReadMotor.getData(id, MX_ADDRESS_TEMP   , 1);
 
-//  this->darwin_data.motor_state[id].pos      = this->int2double(buff_pos)    * MOTOR_POS_SCALE;
-//  this->darwin_data.motor_state[id].speed    = this->int2double(buff_speed)  * MOTOR_SPEED_SCALE;
-//  this->darwin_data.motor_state[id].load     = this->int2double(buff_load)   * MOTOR_LOAD_SCALE;
+//  this->dynamixel_data.motor_state[id].pos      = this->int2double(buff_pos)    * MOTOR_POS_SCALE;
+//  this->dynamixel_data.motor_state[id].speed    = this->int2double(buff_speed)  * MOTOR_SPEED_SCALE;
+//  this->dynamixel_data.motor_state[id].load     = this->int2double(buff_load)   * MOTOR_LOAD_SCALE;
 
-  this->darwin_data.motor_state[id].pos      = lut->dynEncoder2rad(buff_pos, MOTOR_ENC_REZ);
-  this->darwin_data.motor_state[id].speed    = lut->dynEncoderSpeed2radPerSec(buff_speed);
-  this->darwin_data.motor_state[id].load     = lut->dynSensorLoad2Percent(buff_load);
-  this->darwin_data.motor_state[id].voltage  = (double)buff_voltage  * MOTOR_VOLTAGE_SCALE;
-  this->darwin_data.motor_state[id].temp     = (double)buff_temp     * MOTOR_TEMP_SCALE;
+  this->dynamixel_data.motor_state[id].pos      = lut->dynEncoder2rad(buff_pos, MOTOR_ENC_REZ);
+  this->dynamixel_data.motor_state[id].speed    = lut->dynEncoderSpeed2radPerSec(buff_speed);
+  this->dynamixel_data.motor_state[id].load     = lut->dynSensorLoad2Percent(buff_load);
+  this->dynamixel_data.motor_state[id].voltage  = (double)buff_voltage  * MOTOR_VOLTAGE_SCALE;
+  this->dynamixel_data.motor_state[id].temp     = (double)buff_temp     * MOTOR_TEMP_SCALE;
 
   return RETURN_OK; 
 }
 
 
 /* Set Gain */
-int DarwinLofaro::setGain(int mot, double val, int mode)
+int DynamixelLofaro::setGain(int mot, double val, int mode)
 {
-    if(mot > DARWIN_MOTOR_MAX) return RETURN_FAIL;
-    if(mot < DARWIN_MOTOR_MIN) return RETURN_FAIL;
+    if(mot > DYNAMIXEL_MOTOR_MAX) return RETURN_FAIL;
+    if(mot < DYNAMIXEL_MOTOR_MIN) return RETURN_FAIL;
 
     uint8_t addr = MX_ADDRESS_P_GAIN;
-    if     ( mode == DARWIN_ENUM_P_GAIN ) addr = MX_ADDRESS_P_GAIN;
-    else if( mode == DARWIN_ENUM_I_GAIN ) addr = MX_ADDRESS_I_GAIN;
-    else if( mode == DARWIN_ENUM_D_GAIN ) addr = MX_ADDRESS_D_GAIN;
+    if     ( mode == DYNAMIXEL_ENUM_P_GAIN ) addr = MX_ADDRESS_P_GAIN;
+    else if( mode == DYNAMIXEL_ENUM_I_GAIN ) addr = MX_ADDRESS_I_GAIN;
+    else if( mode == DYNAMIXEL_ENUM_D_GAIN ) addr = MX_ADDRESS_D_GAIN;
     else return RETURN_FAIL;
 
 
@@ -745,32 +745,32 @@ int DarwinLofaro::setGain(int mot, double val, int mode)
 }
 
 /* Set P Gain */
-int DarwinLofaro::setPGain(int mot, double val)
+int DynamixelLofaro::setPGain(int mot, double val)
 {
-  return this->setGain(mot, val, DARWIN_ENUM_P_GAIN);
+  return this->setGain(mot, val, DYNAMIXEL_ENUM_P_GAIN);
 }
 
 /* Set I Gain */
-int DarwinLofaro::setIGain(int mot, double val)
+int DynamixelLofaro::setIGain(int mot, double val)
 {
-  return this->setGain(mot, val, DARWIN_ENUM_I_GAIN);
+  return this->setGain(mot, val, DYNAMIXEL_ENUM_I_GAIN);
 }
 
 /* Set D Gain */
-int DarwinLofaro::setDGain(int mot, double val)
+int DynamixelLofaro::setDGain(int mot, double val)
 {
-  return this->setGain(mot, val, DARWIN_ENUM_D_GAIN);
+  return this->setGain(mot, val, DYNAMIXEL_ENUM_D_GAIN);
 }
 
 /* Get Button */
-uint8_t DarwinLofaro::getButton()
+uint8_t DynamixelLofaro::getButton()
 {
   uint8_t buff = 0;
   int e = this->read(ID_CM730, CM730_ADDRESS_BUTTON, &buff);
   return buff;
 }
 
-int DarwinLofaro::getButton(int butt, uint8_t buff)
+int DynamixelLofaro::getButton(int butt, uint8_t buff)
 {
   if(butt > 1) return -1;
   if(butt < 0) return -1;
@@ -783,14 +783,14 @@ int DarwinLofaro::getButton(int butt, uint8_t buff)
   return 0;
 }
 
-int DarwinLofaro::getButton(int butt)
+int DynamixelLofaro::getButton(int butt)
 {
   uint8_t buff = this->getButton();
   return this->getButton(butt, buff);
 }
 
 /* Get LED */
-int DarwinLofaro::getLed(int val)
+int DynamixelLofaro::getLed(int val)
 {
   if( val > 2 ) return -1;
 
@@ -806,7 +806,7 @@ int DarwinLofaro::getLed(int val)
   return 0;
 }
 
-uint8_t DarwinLofaro::getLed()
+uint8_t DynamixelLofaro::getLed()
 {
   uint8_t buff     = 0;
   uint8_t buff_err = 128;
@@ -816,12 +816,12 @@ uint8_t DarwinLofaro::getLed()
 }
 
 /* Set LED */
-int DarwinLofaro::setLed(uint8_t val)
+int DynamixelLofaro::setLed(uint8_t val)
 {
   return this->write(ID_CM730, CM730_ADDRESS_LED_PANNEL, val);
 }
 
-int DarwinLofaro::setLed(int led, int val)
+int DynamixelLofaro::setLed(int led, int val)
 {
   if(led > 2 ) return RETURN_FAIL;
 
@@ -834,14 +834,14 @@ int DarwinLofaro::setLed(int led, int val)
 }
 
 /* Read one byte */
-uint8_t DarwinLofaro::read(uint8_t id, uint8_t addr)
+uint8_t DynamixelLofaro::read(uint8_t id, uint8_t addr)
 {
   uint8_t buff = 0;
   this->read(id, addr, &buff);
   return buff;
 }
 
-int DarwinLofaro::read(uint8_t id, uint8_t addr, uint8_t* buff)
+int DynamixelLofaro::read(uint8_t id, uint8_t addr, uint8_t* buff)
 {
   uint8_t dxl_error = 0;
   uint8_t buff_err = 128;

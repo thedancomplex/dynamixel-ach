@@ -16,11 +16,13 @@
 
 /* Author: Daniel M. Lofaro */
 
-#include "dynamixel_ach_client.h"
+#include "lofaro_dynamixel_ach_client.h"
 #include <unistd.h>
 #include <string.h>
 
-int16_t mot = 4;
+#define MOT_ID 4
+double mot_pos = 0.2;
+
 
 int main()
 { 
@@ -30,30 +32,25 @@ int main()
 
   int r = 0;
 
-  r = dac.cmd(DYNAMIXEL_CMD_ID_ADD, mot);
-  if( r == DYNAMIXEL_CMD_OK ){ r=0; }
-  else{ printf("1\n"); return 1; }
 
   /* Turn On System */
   r = dac.cmd(DYNAMIXEL_CMD_ON, true);
   if( r == DYNAMIXEL_CMD_OK ){ r=0; }
   else{ printf("1\n"); return 1; }
 
-  /* Get into home positon */
+  r = dac.cmd(DYNAMIXEL_CMD_ID_ADD, (int16_t)MOT_ID);
+  if( r == DYNAMIXEL_CMD_OK ){ r=0; }
+  else{ printf("1\n"); return 1; }
  
   while(1)
   { 
-//    dac.stageRefPos(mot, -0.05);
-    dac.stageRefVel(mot, 0.0);
-    dac.stageRefTorque(mot, 0.0);
+    mot_pos = -mot_pos;
+    dac.stageRefPos(MOT_ID, mot_pos);
+    dac.stageRefVel(MOT_ID, 100.0);
+    dac.stageRefTorque(MOT_ID, 0.3);
     dac.postRef();
-    dac.sleep(2.0);
+    dac.sleep(0.1);
     
-//    dac.stageRefPos(mot, 0.05);
-    dac.stageRefVel(mot, 0.0);
-    dac.stageRefTorque(mot, 0.0);
-    dac.postRef();
-    dac.sleep(0.5);
     printf("0\n");
   }
   return 0;

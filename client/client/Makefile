@@ -1,6 +1,6 @@
 default: all
 
-CFLAGS := -I./include -I./../include -Wall
+CFLAGS := -I./../include -I./../../include -Wall
 CC := g++
 
 BINARIES := dynamixel-ach-client

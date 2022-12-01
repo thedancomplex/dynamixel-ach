@@ -48,8 +48,8 @@ class DynamixelAch
     int do_time();
     int do_save_previous_state();
     int m_REF_MODE = MODE_REF;
-    int id_clear();
-    int id_add(int the_id);
+    int idClear();
+    int idAdd(int the_id);
 
     int the_mode_state = 0;
     int the_mode_ref   = 0;
@@ -79,8 +79,6 @@ class DynamixelAch
     /* Command Time Channel */
     ach_channel_t chan_dynamixel_time;
 
-    /* index vector */
-    std::vector< int16_t > dyn_id;
 };
 
 DynamixelAch::DynamixelAch()
@@ -133,14 +131,14 @@ DynamixelAch::DynamixelAch()
   return;
 }
 
-int DynamixelAch::id_clear()
+int DynamixelAch::idClear()
 {
-  this->dyn_id.clear();
+  this->dl->idClear();
   return 0;
 }
-int DynamixelAch::id_add(int the_id)
+int DynamixelAch::idAdd(int the_id)
 {
-  this->dyn_id.push_back(the_id);
+  this->dl->idAdd(the_id);
   return 0;
 }
 int DynamixelAch::do_time()
@@ -154,10 +152,6 @@ int DynamixelAch::open()
 {
   this->dl->setup("/dev/ttyUSB0", true);
   this->dl->sleep(2.0);
-
-  uint8_t b = 1;
-  b = b << this->led_mode;
-  this->dl->setLed(b);   
 
   return 0;
 }
@@ -184,17 +178,18 @@ int DynamixelAch::do_cmd(int mode)
   bool do_return = false;
   if( ( r == ACH_OK ) | ( r == ACH_MISSED_FRAME ) )
   {
+    printf("DEBUG: In CMD - %d - data = %d\n", this->dynamixel_cmd.cmd, this->dynamixel_cmd.data[0]);
     switch (this->dynamixel_cmd.cmd)
     {
       case DYNAMIXEL_CMD_ID_ADD:
       {
-        this->id_add(dynamixel_cmd.data[0]);
+        printf("%d\n",this->idAdd(this->dynamixel_cmd.data[0]));
         do_return = true;
         break;
       } 
       case DYNAMIXEL_CMD_ID_RESET:
       {
-        this->id_clear();
+        this->idClear();
         do_return = true;
         break;
       }
@@ -365,36 +360,6 @@ int DynamixelAch::loop(double hz, int mode_state, int mode_ref)
   return ref;
 }
 
-
-/*
-int DynamixelAch::button_reset()
-{
-  printf("Button: Resetting System\n");
-  this->run_loop = false;
-  this->dl->off();
-  std::system("dynamixel-ach stop walking");
-  std::system("dynamixel-ach stop server no_wait");
-  return 0;
-}
-
-int DynamixelAch::button_off()
-{
-  printf("Button: Turning off power\n");
-  this->run_loop = false;
-  this->dl->off();
-  return 0;
-}
-
-int DynamixelAch::button_on()
-{
-  printf("Button: Turning on power\n");
-  this->dl->on();
-  this->dl->sleep(1.0);
-  this->run_loop = true;
-  return 0;
-}
-*/
-
 int DynamixelAch::do_save_previous_state()
 {
   this->dynamixel_ref_0 = this->dynamixel_ref;
@@ -413,7 +378,7 @@ int DynamixelAch::do_debug()
   int ret = 0;
   if(this->debug_flag)
   {
-    for( int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++ )
+    for (int16_t& i: this->dl->dyn_id)
     {
       double p0 = this->dynamixel_ref_0.motor_ref[i].pos;
       double p1 = this->dynamixel_ref.motor_ref[i].pos;
@@ -463,7 +428,7 @@ int DynamixelAch::main_loop(int mode_state, int mode_ref)
 int DynamixelAch::do_gain()
 {
   int ret = 0;
-  for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
+  for (int16_t& i: this->dl->dyn_id)
   {
     if( (uint8_t)this->dynamixel_ref.motor_ref[i].p_gain != (uint8_t)this->dynamixel_ref_0.motor_ref[i].p_gain ) ret += this->dl->setPGain(i, this->dynamixel_ref.motor_ref[i].p_gain);
     if( (uint8_t)this->dynamixel_ref.motor_ref[i].i_gain != (uint8_t)this->dynamixel_ref_0.motor_ref[i].i_gain ) ret += this->dl->setPGain(i, this->dynamixel_ref.motor_ref[i].i_gain);
@@ -486,9 +451,7 @@ int DynamixelAch::do_ref(int mode)
   int move_mode = m_REF_MODE;
   //int move_mode = this->dynamixel_ref.mode;
 
-  switch (move_mode)
-  {
-    for (int16_t& i: this->dyn_id)
+    for (int16_t& i: this->dl->dyn_id)
     {
        if( (i <= DYNAMIXEL_MOTOR_MAX) & ( i >= 0) )
        {
@@ -499,7 +462,6 @@ int DynamixelAch::do_ref(int mode)
        }
     }
     ret += this->dl->putMotor(); 
-  }
 
   if( ret > 1 ) ret = 1;
   return ret;
@@ -515,7 +477,7 @@ int DynamixelAch::do_state(int mode)
   {
     case HZ_STATE_MOTORS:
     {
-      for (int16_t& i: this->dyn_id)
+      for (int16_t& i: this->dl->dyn_id)
       {
         ret += this->dl->getMotor(i);
       }

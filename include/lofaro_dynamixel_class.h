@@ -106,6 +106,9 @@ class DynamixelLofaro
     /* Closes port */
     int close();
 
+    /* index vector */
+    std::vector< int16_t > dyn_id;
+
   private:
     /* Open Port */
     int open();
@@ -134,9 +137,5 @@ class DynamixelLofaro
 
     /* Check ID */
     int checkId(int mot);
-
-    /* index vector */
-    std::vector< int16_t > dyn_id;
-
 };
 

@@ -1,5 +1,4 @@
 #!/bin/bash
-HUMBLE_INSTALL_DIR=~/ros2_humble/
 DEB_VERSION=$(env -i bash -c '. /etc/os-release; echo $VERSION_CODENAME')
 PACKAGE_NAME=dynamixel-legacy
 INSTALL_DIR=/etc/$PACKAGE_NAME
@@ -29,11 +28,6 @@ DYNAMIXEL_ACH_CHAN_CMD='dynamixel-ach-chan-cmd'
 DYNAMIXEL_ACH_CHAN_CMD_RETURN='dynamixel-ach-chan-ret'
 DYNAMIXEL_ACH_CHAN_CMD_VEL='dynamixel-ach-chan-cmd-vel'
 DYNAMIXEL_ACH_CHAN_TIME='dynamixel-ach-chan-time'
-
-DIR_ROS_ACH_BRIDGE=$SYSTEM_ACH_DIR/ros2_ach_bridge/src/build/ros2_ach_bridge/
-BIN_NAME_ROS_ACH_BRIDGE_REF=ros2_ach_bridge
-BIN_NAME_ROS_ACH_BRIDGE_STATE=ros2_ach_bridge_state
-ROS_SORUCE_SCRIPT=source /etc/ros2/install/local_setup.bash
 
 #DYNAMIXEL_IP='10.5.0.249'
 DYNAMIXEL_IP='10.111.111.11'

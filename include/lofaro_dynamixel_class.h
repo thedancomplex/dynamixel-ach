@@ -46,6 +46,12 @@ class DynamixelLofaro
     /* Send staged motor positions to motor "mot" */
     int putMotor(int mot);
 
+    /* Add ID */
+    int idAdd(int val);
+
+    /* Clear all IDs */
+    int idClear();
+
     /* Turn on all */
     int on();
 
@@ -125,5 +131,12 @@ class DynamixelLofaro
 
     /* LED current state */
     uint8_t led_state = 0;
+
+    /* Check ID */
+    int checkId(int mot);
+
+    /* index vector */
+    std::vector< int16_t > dyn_id;
+
 };
 

@@ -33,7 +33,9 @@ int main()
   printf("Status = %d\n\n",r);
 
   printf("Turn on actuator\n");
-  r = dl.on(MOT_ID);
+  r = dl.idAdd(MOT_ID);
+  r = dl.on();
+  //r = dl.on(MOT_ID);
   printf("Status = %d\n\n",r);
 
   for (int i = 0; i < 10; i++)
@@ -41,9 +43,10 @@ int main()
     mot_pos = -mot_pos;
     r = dl.setMotPos(    MOT_ID, mot_pos);
     r = dl.setMotSpeed(  MOT_ID, 100.0);
-    r = dl.setMotTorque( MOT_ID, 100.0);
+    r = dl.setMotTorque( MOT_ID, 0.1);
     r = dl.stageMotor(MOT_ID); 
-    r = dl.putMotor(MOT_ID);
+    r = dl.putMotor();
+    //r = dl.putMotor(MOT_ID);
     printf("Set = %f - Status = %d\n",mot_pos, r);
     r = dl.getMotor(MOT_ID);
     printf("Pos = %f\n", dl.dynamixel_data.motor_state[MOT_ID].pos);

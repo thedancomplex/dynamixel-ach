@@ -26,11 +26,25 @@ DynamixelLofaro::DynamixelLofaro()
 //  packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
   memset(&this->dynamixel_data, 0, sizeof(this->dynamixel_data));
-  for( int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++ )
+  for (int16_t& i: this->dyn_id)
   {
     this->dynamixel_data.motor_ref[i].torque = MOTOR_TORQUE_MAX;
   }
   return;
+}
+
+/* Add ID */
+int DynamixelLofaro::idAdd(int val)
+{
+  this->dyn_id.push_back(val);
+  return 0;
+}
+
+/* Clear all IDs */
+int DynamixelLofaro::idClear()
+{
+  this->dyn_id.clear();
+  return 0;
 }
 
 /* Open Port */
@@ -157,13 +171,7 @@ int DynamixelLofaro::setLowLatency(const char* the_serial_port, bool low_latency
 int DynamixelLofaro::on()
 {
   int ret = 0;
-  ret += this->on(ID_CM730);
-  this->lut->sleep(2.0);
-  ret += this->on(ID_FT_RIGHT);
-  this->lut->sleep(0.1);
-  ret += this->on(ID_FT_LEFT);
-  this->lut->sleep(0.1);
-  for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
+  for (int16_t& i: this->dyn_id)
   {
     ret += this->on(i);
     this->lut->sleep(0.05);
@@ -241,13 +249,7 @@ int DynamixelLofaro::write(uint8_t *txpacket)
 int DynamixelLofaro::off()
 {
   int ret = 0;
-  ret += this->off(ID_CM730);
-  this->lut->sleep(2.0);
-  ret += this->off(ID_FT_RIGHT);
-  this->lut->sleep(0.1);
-  ret += this->off(ID_FT_LEFT);
-  this->lut->sleep(0.1);
-  for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
+  for (int16_t& i: this->dyn_id)
   {
     ret += this->off(i);
     this->lut->sleep(0.05);
@@ -328,8 +330,20 @@ uint16_t DynamixelLofaro::double2uint16(double val)
   return the_out;
 }
 
+int DynamixelLofaro::checkId(int mot)
+{
+    for (int16_t& i: this->dyn_id)
+    {
+      if( i == mot ) return RETURN_OK;
+    }
+    return RETURN_FAIL;
+}
+
 int DynamixelLofaro::setMotPos(int mot, double val)
 {
+  /* Check ID */
+  if (this->checkId(mot) == RETURN_FAIL) return RETURN_FAIL;
+
   /* Sets the motor desired position in rad */
   if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
   int id = mot;
@@ -340,6 +354,9 @@ int DynamixelLofaro::setMotPos(int mot, double val)
 
 int DynamixelLofaro::setMotTorque(int mot, double val)
 {
+  /* Check ID */
+  if (this->checkId(mot) == RETURN_FAIL) return RETURN_FAIL;
+
   /* Sets the motor desired max load in percentage */
   if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
   int id = mot;
@@ -352,6 +369,9 @@ int DynamixelLofaro::setMotTorque(int mot, double val)
 
 int DynamixelLofaro::setMotSpeed(int mot, double val)
 {
+  /* Check ID */
+  if (this->checkId(mot) == RETURN_FAIL) return RETURN_FAIL;
+
   /* Sets the motor desired speed in rad/sec */
   if( ( mot > DYNAMIXEL_MOTOR_MAX ) | ( mot < DYNAMIXEL_MOTOR_MIN ) ) return RETURN_FAIL;
   int id = mot;
@@ -366,7 +386,7 @@ int DynamixelLofaro::stageMotor()
 {
   /* Stage all motor positions torques and speeds */
   int ret = 0;
-  for (int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
+  for (int16_t& i: this->dyn_id)
   {
     ret += this->stageMotor(i);
   }
@@ -489,7 +509,7 @@ int DynamixelLofaro::getMotor()
 {
   /* Stage all motor positions torques and speeds */
   int ret = 0;
-  for (int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
+  for (int16_t& i: this->dyn_id)
   {
     ret += this->getMotor(i);
   }

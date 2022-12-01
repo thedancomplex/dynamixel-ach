@@ -6,10 +6,6 @@
 #include "lofaro_utils.h"
 #endif
 
-//#include "dynamixel_sdk/dynamixel_sdk.h"
-//#include "/usr/local/include/dynamixel_sdk/dynamixel_sdk.h"
-
-
 class DynamixelLofaro
 {
   public:
@@ -100,14 +96,6 @@ class DynamixelLofaro
 
     /* Set D Gain */
     int setDGain(int mot, double val);
-
-    /* Set LED */
-    int setLed(uint8_t val);
-    int setLed(int led, int val);
-
-    /* Get LED */
-    uint8_t getLed();
-    int getLed(int val);
 
     /* Closes port */
     int close();

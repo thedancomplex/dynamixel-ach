@@ -604,50 +604,6 @@ int DynamixelLofaro::setDGain(int mot, double val)
   return this->setGain(mot, val, DYNAMIXEL_ENUM_D_GAIN);
 }
 
-/* Get LED */
-int DynamixelLofaro::getLed(int val)
-{
-  if( val > 2 ) return -1;
-
-  uint8_t buff = this->getLed();
-  uint8_t err = 128 & buff;
-
-  if( err > 0 ) return -1;
-
-  uint8_t the_out = 1;
-  the_out = the_out << val;
-  the_out = the_out & buff;
-  if( buff > 0 ) return 1;
-  return 0;
-}
-
-uint8_t DynamixelLofaro::getLed()
-{
-  uint8_t buff     = 0;
-  uint8_t buff_err = 128;
-  int e = this->read(ID_CM730, CM730_ADDRESS_LED_PANNEL, &buff);
-  if( e == RETURN_FAIL) buff = buff | buff_err;
-  return buff;
-}
-
-/* Set LED */
-int DynamixelLofaro::setLed(uint8_t val)
-{
-  return this->write(ID_CM730, CM730_ADDRESS_LED_PANNEL, val);
-}
-
-int DynamixelLofaro::setLed(int led, int val)
-{
-  if(led > 2 ) return RETURN_FAIL;
-
-  uint8_t d = 0;
-  if( val > 0 ) d = 1;
-
-  uint8_t tmp = d << led;
-  this->led_state = this->led_state | tmp;
-  return this->setLed(this->led_state);
-}
-
 /* Read one byte */
 uint8_t DynamixelLofaro::read(uint8_t id, uint8_t addr)
 {

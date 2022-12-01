@@ -1,5 +1,5 @@
-#define DYNAMIXEL_LOFARO_ACH 1
-#define DYNAMIXEL_LOFARO_DYN 1
+#define DARWIN_LOFARO_ACH 1
+#define DARWIN_LOFARO_DYN 1
 
 #include "lofaro_dynamixel.h"
 #include "lofaro_dynamixel_includes_ach.h"
@@ -12,7 +12,7 @@
 
 
 
-class DynamixelAch
+class DarwinAch
 {
   public:
     DarwinAch();
@@ -30,11 +30,13 @@ class DynamixelAch
     int getState();
 
     /* Data types */
-    dynamixel_data_def_t     dynamixel_ref;
-    dynamixel_data_def_t     dynamixel_state;
-    dynamixel_cmd_def_t      dynamixel_cmd;
-    dynamixel_cmd_def_t      dynamixel_cmd_return;
-    double                   dynamixel_time = 0.0;
+    darwin_data_def_t     darwin_ref;
+    darwin_data_def_t     darwin_ref_walking;
+    darwin_data_def_t     darwin_state;
+    darwin_cmd_def_t      darwin_cmd;
+    darwin_cmd_def_t      darwin_cmd_return;
+    darwin_cmd_vel_def_t  darwin_cmd_vel;
+    double                darwin_time = 0.0;
 
   private:
     int main_loop();
@@ -44,10 +46,20 @@ class DynamixelAch
     int do_state(int mode);
     int do_cmd(int mode);
     int do_gain();
+    int do_button();
     int do_debug();
     int do_time();
     int do_save_previous_state();
     int m_REF_MODE = MODE_REF;
+
+    /* Previous Button States */
+    int button_mode_0  = 0;
+    int button_start_0 = 0;
+
+    int button_on();
+    int button_off();
+    int button_walking();
+    int button_reset();
 
     int the_mode_state = 0;
     int the_mode_ref   = 0;
@@ -58,82 +70,107 @@ class DynamixelAch
     DarwinLofaro* dl = new DarwinLofaro();
 
     /* Data types */
-    dynamixel_data_def_t dynamixel_ref_0;
+    darwin_data_def_t darwin_ref_0;
 
     bool run_loop = false;
     bool debug_flag = false;
     /* Reference Channel */
-    ach_channel_t chan_ref;  
+    ach_channel_t chan_darwin_ref;  
+
+    /* Reference Walking Channel */
+    ach_channel_t chan_darwin_ref_walking;  
 
     /* State Feedback Channel */
-    ach_channel_t chan_state;
+    ach_channel_t chan_darwin_state;
 
     /* Command channel */
-    ach_channel_t chan_cmd;
+    ach_channel_t chan_darwin_cmd;
 
     /* Command Channel Return */
-    ach_channel_t chan_cmd_return;
+    ach_channel_t chan_darwin_cmd_return;
+
+    /* Command Vel Channel */
+    ach_channel_t chan_darwin_cmd_vel;
 
     /* Command Time Channel */
-    ach_channel_t chan_time;
+    ach_channel_t chan_darwin_time;
 };
 
 DarwinAch::DarwinAch()
 {
   /* Zero Data */
-  memset(&this->dynamixel_ref,          0, sizeof(this->dynamixel_ref));
-  memset(&this->dynamixel_ref_0,        0, sizeof(this->dynamixel_ref_0));
-  memset(&this->dynamixel_state,        0, sizeof(this->dynamixel_state));
-  memset(&this->dynamixel_cmd,          0, sizeof(this->dynamixel_cmd));
-  memset(&this->dynamixel_cmd_return,   0, sizeof(this->dynamixel_cmd_return));
+  memset(&this->darwin_ref,          0, sizeof(this->darwin_ref));
+  memset(&this->darwin_ref_walking,  0, sizeof(this->darwin_ref_walking));
+  memset(&this->darwin_ref_0,        0, sizeof(this->darwin_ref_0));
+  memset(&this->darwin_state,        0, sizeof(this->darwin_state));
+  memset(&this->darwin_cmd,          0, sizeof(this->darwin_cmd));
+  memset(&this->darwin_cmd_return,   0, sizeof(this->darwin_cmd_return));
+  memset(&this->darwin_cmd_vel,      0, sizeof(this->darwin_cmd_vel));
 
-  for( int i = 0; i <= DYNAMIXEL_MOTOR_MAX; i++ )
+  for( int i = 0; i <= DARWIN_MOTOR_MAX; i++ )
   {
-    this->dynamixel_ref.motor_ref[i].pos            = DYNAMIXEL_REF_POS_0;
-    this->dynamixel_ref.motor_ref[i].speed          = DYNAMIXEL_REF_VEL_0;
-    this->dynamixel_ref.motor_ref[i].torque         = DYNAMIXEL_REF_TOR_0;
+    this->darwin_ref.motor_ref[i].pos            = DARWIN_REF_POS_0;
+    this->darwin_ref.motor_ref[i].speed          = DARWIN_REF_VEL_0;
+    this->darwin_ref.motor_ref[i].torque         = DARWIN_REF_TOR_0;
+    this->darwin_ref_walking.motor_ref[i].pos    = DARWIN_REF_POS_0;
+    this->darwin_ref_walking.motor_ref[i].speed  = DARWIN_REF_VEL_0;
+    this->darwin_ref_walking.motor_ref[i].torque = DARWIN_REF_TOR_0;
   }
+
+
+
+  /* Make Ach Channels */
+/*
+  printf("ACH_OK = %d\n", ACH_OK);
+  printf("ACH_EEXIST = %d\n", ACH_EEXIST);
+  printf("ACH_ENOENT = %d\n", ACH_ENOENT);
+  printf("r = %d\n", r);
+*/
 
   ach_status_t r = ACH_OK;
   /* Create Channels if they need to be created */
 /*
-  r = ach_create(DYNAMIXEL_ACH_CHAN_REF,        10, 2000, NULL );
-  r = ach_create(DYNAMIXEL_ACH_CHAN_STATE,      10, 2000, NULL );
-  r = ach_create(DYNAMIXEL_ACH_CHAN_CMD,        10, 2000, NULL );
-  r = ach_create(DYNAMIXEL_ACH_CHAN_CMD_RETURN, 10, 2000, NULL );
+  r = ach_create(DARWIN_ACH_CHAN_REF,        10, 2000, NULL );
+  r = ach_create(DARWIN_ACH_CHAN_STATE,      10, 2000, NULL );
+  r = ach_create(DARWIN_ACH_CHAN_CMD,        10, 2000, NULL );
+  r = ach_create(DARWIN_ACH_CHAN_CMD_RETURN, 10, 2000, NULL );
 */
 
   /* Open Channels */
-  r = ach_open(&this->chan_dynamixel_ref,         DYNAMIXEL_ACH_CHAN_REF,         NULL);
-  r = ach_open(&this->chan_dynamixel_state,       DYNAMIXEL_ACH_CHAN_STATE,       NULL);
-  r = ach_open(&this->chan_dynamixel_cmd,         DYNAMIXEL_ACH_CHAN_CMD,         NULL);
-  r = ach_open(&this->chan_dynamixel_cmd_return,  DYNAMIXEL_ACH_CHAN_CMD_RETURN,  NULL);
-  r = ach_open(&this->chan_dynamixel_time,        DYNAMIXEL_ACH_CHAN_TIME,        NULL);
+  r = ach_open(&this->chan_darwin_ref,         DARWIN_ACH_CHAN_REF,         NULL);
+  r = ach_open(&this->chan_darwin_ref_walking, DARWIN_ACH_CHAN_REF_WALKING, NULL);
+  r = ach_open(&this->chan_darwin_state,       DARWIN_ACH_CHAN_STATE,       NULL);
+  r = ach_open(&this->chan_darwin_cmd,         DARWIN_ACH_CHAN_CMD,         NULL);
+  r = ach_open(&this->chan_darwin_cmd_return,  DARWIN_ACH_CHAN_CMD_RETURN,  NULL);
+  r = ach_open(&this->chan_darwin_cmd_vel,     DARWIN_ACH_CHAN_CMD_VEL,     NULL);
+  r = ach_open(&this->chan_darwin_time,        DARWIN_ACH_CHAN_TIME,        NULL);
 
   /* Flush all channels */
-  ach_flush(&this->chan_dynamixel_ref);
-  ach_flush(&this->chan_dynamixel_state);
-  ach_flush(&this->chan_dynamixel_cmd);
-  ach_flush(&this->chan_dynamixel_cmd_return);
-  ach_flush(&this->chan_dynamixel_time);
+  ach_flush(&this->chan_darwin_ref);
+  ach_flush(&this->chan_darwin_ref_walking);
+  ach_flush(&this->chan_darwin_state);
+  ach_flush(&this->chan_darwin_cmd);
+  ach_flush(&this->chan_darwin_cmd_return);
+  ach_flush(&this->chan_darwin_cmd_vel);
+  ach_flush(&this->chan_darwin_time);
 
   /* Do initial put on the channel to make sure the exist */
-  ach_put(&this->chan_dynamixel_ref,         &this->dynamixel_ref,         sizeof(this->dynamixel_ref));
-  ach_put(&this->chan_dynamixel_ref_walking, &this->dynamixel_ref_walking, sizeof(this->dynamixel_ref_walking));
-  ach_put(&this->chan_dynamixel_state,       &this->dynamixel_state,       sizeof(this->dynamixel_state));
-  ach_put(&this->chan_dynamixel_cmd,         &this->dynamixel_cmd,         sizeof(this->dynamixel_cmd));
-  ach_put(&this->chan_dynamixel_cmd_return,  &this->dynamixel_cmd_return,  sizeof(this->dynamixel_cmd_return));
-  ach_put(&this->chan_dynamixel_cmd_vel,  &this->dynamixel_cmd_vel,  sizeof(this->dynamixel_cmd_vel));
+  ach_put(&this->chan_darwin_ref,         &this->darwin_ref,         sizeof(this->darwin_ref));
+  ach_put(&this->chan_darwin_ref_walking, &this->darwin_ref_walking, sizeof(this->darwin_ref_walking));
+  ach_put(&this->chan_darwin_state,       &this->darwin_state,       sizeof(this->darwin_state));
+  ach_put(&this->chan_darwin_cmd,         &this->darwin_cmd,         sizeof(this->darwin_cmd));
+  ach_put(&this->chan_darwin_cmd_return,  &this->darwin_cmd_return,  sizeof(this->darwin_cmd_return));
+  ach_put(&this->chan_darwin_cmd_vel,  &this->darwin_cmd_vel,  sizeof(this->darwin_cmd_vel));
 
-  this->dynamixel_time = this->dl->time();
-  ach_put(&this->chan_dynamixel_time,  &this->dynamixel_time,  sizeof(this->dynamixel_time));
+  this->darwin_time = this->dl->time();
+  ach_put(&this->chan_darwin_time,  &this->darwin_time,  sizeof(this->darwin_time));
   return;
 }
 
 int DarwinAch::do_time()
 {
-  this->dynamixel_time = this->dl->time();
-  ach_put(&this->chan_dynamixel_time,  &this->dynamixel_time,  sizeof(this->dynamixel_time));
+  this->darwin_time = this->dl->time();
+  ach_put(&this->chan_darwin_time,  &this->darwin_time,  sizeof(this->darwin_time));
   return 0;
 }
 
@@ -157,7 +194,7 @@ int DarwinAch::sleep(double val)
 int DarwinAch::getState()
 {
   size_t fs;
-  ach_status_t r = ach_get( &this->chan_dynamixel_state, &this->dynamixel_state, sizeof(this->dynamixel_state), &fs, NULL, ACH_O_LAST );
+  ach_status_t r = ach_get( &this->chan_darwin_state, &this->darwin_state, sizeof(this->darwin_state), &fs, NULL, ACH_O_LAST );
   return (int)r;
 }
 
@@ -165,15 +202,15 @@ int DarwinAch::do_cmd(int mode)
 {
   size_t fs;
   /* Get the latest cmd channel */
-  ach_status_t r = ach_get( &this->chan_dynamixel_cmd, &this->dynamixel_cmd, sizeof(this->dynamixel_cmd), &fs, NULL, ACH_O_LAST );
+  ach_status_t r = ach_get( &this->chan_darwin_cmd, &this->darwin_cmd, sizeof(this->darwin_cmd), &fs, NULL, ACH_O_LAST );
 //  if(ACH_OK != r) {fprintf(stderr, "Ref r = %s\n",ach_result_to_string(r));}
 
   bool do_return = false;
   if( ( r == ACH_OK ) | ( r == ACH_MISSED_FRAME ) )
   {
-    switch (this->dynamixel_cmd.cmd)
+    switch (this->darwin_cmd.cmd)
     {
-      case DYNAMIXEL_CMD_CLOSE:
+      case DARWIN_CMD_CLOSE:
       {
         this->dl->close();
         this->dl->sleep(2.0);
@@ -181,7 +218,7 @@ int DarwinAch::do_cmd(int mode)
         do_return = true;
         break;
       }
-      case DYNAMIXEL_CMD_OPEN:
+      case DARWIN_CMD_OPEN:
       {
         this->dl->setup("/dev/ttyUSB0", true);
         this->dl->sleep(2.0);
@@ -189,7 +226,7 @@ int DarwinAch::do_cmd(int mode)
         do_return = true;
         break;
       }
-      case DYNAMIXEL_CMD_ON:
+      case DARWIN_CMD_ON:
       {
         this->dl->setup("/dev/ttyUSB0", true);
         this->dl->sleep(1.0);
@@ -199,17 +236,17 @@ int DarwinAch::do_cmd(int mode)
         do_return = true;
         break;
       }
-      case DYNAMIXEL_CMD_ON_MOTOR:
+      case DARWIN_CMD_ON_MOTOR:
       {
         this->dl->setup("/dev/ttyUSB0", true);
         this->dl->sleep(1.0);
-        this->dl->on(dynamixel_cmd.data[0]);
+        this->dl->on(darwin_cmd.data[0]);
         this->dl->sleep(1.0);
         this->run_loop = true;
         do_return = true;
         break;
       }
-      case DYNAMIXEL_CMD_OFF:
+      case DARWIN_CMD_OFF:
       {
         this->run_loop = false;
         this->dl->off();
@@ -217,9 +254,9 @@ int DarwinAch::do_cmd(int mode)
         do_return = true;
         break;
       }
-      case DYNAMIXEL_CMD_LOOP_MODE:
+      case DARWIN_CMD_LOOP_MODE:
       {
-        int d0 = this->dynamixel_cmd.data[0];
+        int d0 = this->darwin_cmd.data[0];
         if( d0 == HZ_STATE_50_IMU_MOTOR_FT )
         { 
           this->the_mode_state = d0;
@@ -289,9 +326,9 @@ int DarwinAch::do_cmd(int mode)
         }
         break;
       }
-      case DYNAMIXEL_CMD_MODE:
+      case DARWIN_CMD_MODE:
       {
-        int d0 = this->dynamixel_cmd.data[0];
+        int d0 = this->darwin_cmd.data[0];
         if( d0 == MODE_REF )
         { 
           m_REF_MODE = d0;                   
@@ -324,16 +361,16 @@ int DarwinAch::do_cmd(int mode)
 
   if(do_return)
   {
-    memset(&this->dynamixel_cmd_return,   0, sizeof(this->dynamixel_cmd_return));
-    this->dynamixel_cmd_return.cmd = DYNAMIXEL_CMD_OK;
-    ach_put(&this->chan_dynamixel_cmd_return, &this->dynamixel_cmd_return, sizeof(this->dynamixel_cmd_return));
+    memset(&this->darwin_cmd_return,   0, sizeof(this->darwin_cmd_return));
+    this->darwin_cmd_return.cmd = DARWIN_CMD_OK;
+    ach_put(&this->chan_darwin_cmd_return, &this->darwin_cmd_return, sizeof(this->darwin_cmd_return));
     return 0;
   }
   else
   {
-    memset(&this->dynamixel_cmd_return,   0, sizeof(this->dynamixel_cmd_return));
-    this->dynamixel_cmd_return.cmd = DYNAMIXEL_CMD_FAIL;
-    ach_put(&this->chan_dynamixel_cmd_return, &this->dynamixel_cmd_return, sizeof(this->dynamixel_cmd_return));
+    memset(&this->darwin_cmd_return,   0, sizeof(this->darwin_cmd_return));
+    this->darwin_cmd_return.cmd = DARWIN_CMD_FAIL;
+    ach_put(&this->chan_darwin_cmd_return, &this->darwin_cmd_return, sizeof(this->darwin_cmd_return));
     return 1;
   }
 
@@ -349,16 +386,16 @@ int DarwinAch::cmd(int cmd, bool block)
 {
   size_t fs;
   ach_status_t r = ACH_OK;
-  memset(&this->dynamixel_cmd,   0, sizeof(this->dynamixel_cmd));
-  this->dynamixel_cmd.cmd = cmd;
-  r = ach_put(&this->chan_dynamixel_cmd, &this->dynamixel_cmd, sizeof(this->dynamixel_cmd));
+  memset(&this->darwin_cmd,   0, sizeof(this->darwin_cmd));
+  this->darwin_cmd.cmd = cmd;
+  r = ach_put(&this->chan_darwin_cmd, &this->darwin_cmd, sizeof(this->darwin_cmd));
 
   /* Waits until return of cmd if the a block of "ture" is sent */
   if(block)
   {
-    ach_flush(&this->chan_dynamixel_cmd_return);
-    memset(&this->dynamixel_cmd_return,   0, sizeof(this->dynamixel_cmd_return));
-    ach_status_t r = ach_get( &this->chan_dynamixel_cmd_return, &this->dynamixel_cmd_return, sizeof(this->dynamixel_cmd_return), &fs, NULL, ACH_O_WAIT );
+    ach_flush(&this->chan_darwin_cmd_return);
+    memset(&this->darwin_cmd_return,   0, sizeof(this->darwin_cmd_return));
+    ach_status_t r = ach_get( &this->chan_darwin_cmd_return, &this->darwin_cmd_return, sizeof(this->darwin_cmd_return), &fs, NULL, ACH_O_WAIT );
   }
   return (int)r;
 }
@@ -416,8 +453,8 @@ int DarwinAch::do_button()
   try
   {
     uint8_t buff = this->dl->getButton();
-    int button_mode  = this->dl->getButton(DYNAMIXEL_BUTTON_MODE,  buff);
-    int button_start = this->dl->getButton(DYNAMIXEL_BUTTON_START, buff);
+    int button_mode  = this->dl->getButton(DARWIN_BUTTON_MODE,  buff);
+    int button_start = this->dl->getButton(DARWIN_BUTTON_START, buff);
 
     /* Debounce */
     int button_mode_pressed  = 0;
@@ -466,15 +503,15 @@ int DarwinAch::button_reset()
   printf("Button: Resetting System\n");
   this->run_loop = false;
   this->dl->off();
-  std::system("dynamixel-ach stop walking");
-  std::system("dynamixel-ach stop server no_wait");
+  std::system("darwin-ach stop walking");
+  std::system("darwin-ach stop server no_wait");
   return 0;
 }
 
 int DarwinAch::button_walking()
 {
   printf("Button: Turning on Walking\n");
-  std::system("dynamixel-ach start walking");
+  std::system("darwin-ach start walking");
   return 0;
 }
 
@@ -497,7 +534,7 @@ int DarwinAch::button_on()
 
 int DarwinAch::do_save_previous_state()
 {
-  this->dynamixel_ref_0 = this->dynamixel_ref;
+  this->darwin_ref_0 = this->darwin_ref;
   return 0;
 }
 
@@ -513,10 +550,10 @@ int DarwinAch::do_debug()
   int ret = 0;
   if(this->debug_flag)
   {
-    for( int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++ )
+    for( int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++ )
     {
-      double p0 = this->dynamixel_ref_0.motor_ref[i].pos;
-      double p1 = this->dynamixel_ref.motor_ref[i].pos;
+      double p0 = this->darwin_ref_0.motor_ref[i].pos;
+      double p1 = this->darwin_ref.motor_ref[i].pos;
       double dt = abs(p0-p1);
       if( dt > 0.1 )
       {
@@ -540,7 +577,7 @@ int DarwinAch::main_loop()
 
 int DarwinAch::main_loop(int mode_state)
 {
-  if (mode_state >= DYNAMIXEL_HZ_MODE_COUNT) return 1;
+  if (mode_state >= DARWIN_HZ_MODE_COUNT) return 1;
   return this->main_loop(mode_state, HZ_REF_DEFAULT);
 }
 
@@ -563,11 +600,11 @@ int DarwinAch::main_loop(int mode_state, int mode_ref)
 int DarwinAch::do_gain()
 {
   int ret = 0;
-  for(int i = DYNAMIXEL_MOTOR_MIN; i <= DYNAMIXEL_MOTOR_MAX; i++)
+  for(int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++)
   {
-    if( (uint8_t)this->dynamixel_ref.motor_ref[i].p_gain != (uint8_t)this->dynamixel_ref_0.motor_ref[i].p_gain ) ret += this->dl->setPGain(i, this->dynamixel_ref.motor_ref[i].p_gain);
-    if( (uint8_t)this->dynamixel_ref.motor_ref[i].i_gain != (uint8_t)this->dynamixel_ref_0.motor_ref[i].i_gain ) ret += this->dl->setPGain(i, this->dynamixel_ref.motor_ref[i].i_gain);
-    if( (uint8_t)this->dynamixel_ref.motor_ref[i].d_gain != (uint8_t)this->dynamixel_ref_0.motor_ref[i].d_gain ) ret += this->dl->setPGain(i, this->dynamixel_ref.motor_ref[i].d_gain);
+    if( (uint8_t)this->darwin_ref.motor_ref[i].p_gain != (uint8_t)this->darwin_ref_0.motor_ref[i].p_gain ) ret += this->dl->setPGain(i, this->darwin_ref.motor_ref[i].p_gain);
+    if( (uint8_t)this->darwin_ref.motor_ref[i].i_gain != (uint8_t)this->darwin_ref_0.motor_ref[i].i_gain ) ret += this->dl->setPGain(i, this->darwin_ref.motor_ref[i].i_gain);
+    if( (uint8_t)this->darwin_ref.motor_ref[i].d_gain != (uint8_t)this->darwin_ref_0.motor_ref[i].d_gain ) ret += this->dl->setPGain(i, this->darwin_ref.motor_ref[i].d_gain);
   }
   if( ret > 0 ) ret = 1;
   return ret;
@@ -579,24 +616,24 @@ int DarwinAch::do_ref(int mode)
   size_t fs;
   /* Get the latest reference channel */
   ach_status_t r = ACH_OK;
-  r = ach_get( &this->chan_dynamixel_ref,         &this->dynamixel_ref,         sizeof(this->dynamixel_ref),         &fs, NULL, ACH_O_LAST );
-  r = ach_get( &this->chan_dynamixel_ref_walking, &this->dynamixel_ref_walking, sizeof(this->dynamixel_ref_walking), &fs, NULL, ACH_O_LAST );
+  r = ach_get( &this->chan_darwin_ref,         &this->darwin_ref,         sizeof(this->darwin_ref),         &fs, NULL, ACH_O_LAST );
+  r = ach_get( &this->chan_darwin_ref_walking, &this->darwin_ref_walking, sizeof(this->darwin_ref_walking), &fs, NULL, ACH_O_LAST );
 
   int ret = 0;
   /* Set Reference Here */
   int move_mode = m_REF_MODE;
-  //int move_mode = this->dynamixel_ref.mode;
+  //int move_mode = this->darwin_ref.mode;
 
   switch (move_mode)
   {
     case MODE_REF:
     {
 //      printf("Mode: MODE_REF\n");
-      for( int i = 0; i <= DYNAMIXEL_MOTOR_MAX; i++ )
+      for( int i = 0; i <= DARWIN_MOTOR_MAX; i++ )
       {
-        this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
-        this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
-       this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
+        this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref.motor_ref[i].pos;
+        this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref.motor_ref[i].speed;
+       this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref.motor_ref[i].torque;
       }
       break;
     }
@@ -604,11 +641,11 @@ int DarwinAch::do_ref(int mode)
     default:
     {
 //      printf("Mode: MODE_REF (Default)\n");
-      for( int i = 0; i <= DYNAMIXEL_MOTOR_MAX; i++ )
+      for( int i = 0; i <= DARWIN_MOTOR_MAX; i++ )
       {
-        this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
-        this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
-        this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
+        this->dl->darwin_data.motor_ref[i].pos    = this->darwin_ref.motor_ref[i].pos;
+        this->dl->darwin_data.motor_ref[i].speed  = this->darwin_ref.motor_ref[i].speed;
+        this->dl->darwin_data.motor_ref[i].torque = this->darwin_ref.motor_ref[i].torque;
       }
       break;
     }
@@ -698,10 +735,10 @@ int DarwinAch::do_state(int mode)
     }
   }
 
-  this->dynamixel_state = this->dl->dynamixel_data;
+  this->darwin_state = this->dl->darwin_data;
 
   /* Put the data back on the Ach Channel */
-  ach_put(&this->chan_dynamixel_state, &this->dynamixel_state, sizeof(this->dynamixel_state));
+  ach_put(&this->chan_darwin_state, &this->darwin_state, sizeof(this->darwin_state));
 
   if( ret > 0 ) ret = 1;
   return ret;

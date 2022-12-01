@@ -248,7 +248,7 @@ int DynamixelAch::do_cmd(int mode)
         if( d0 == HZ_STATE_MOTORS )
         { 
           this->the_mode_state = d0;
-          //this->dl->rate(200.0);
+          this->dl->rate(200.0);
           printf("Set HZ_STATE_MOTOR\n");
           do_return = true; 
         }

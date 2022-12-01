@@ -3,7 +3,7 @@ default: all
 CFLAGS := -I./include -I./../include -Wall
 CC := g++
 
-BINARIES := dynamixel-ach
+BINARIES := dynamixel-ach-client
 all : $(BINARIES)
 
 LIBS := -lrt -lstdc++ -lach

@@ -20,35 +20,41 @@
 #include <unistd.h>
 #include <string.h>
 
+int16_t mot = 4;
+
 int main()
 { 
   /* Make System Object */
-  DarwinAchClient dac = DarwinAchClient();
+  DynamixelAchClient dac = DynamixelAchClient();
   dac.setRefMode(MODE_REF);
 
   int r = 0;
 
+  r = dac.cmd(DYNAMIXEL_CMD_ID_ADD, mot);
+  if( r == DYNAMIXEL_CMD_OK ){ r=0; }
+  else{ printf("1\n"); return 1; }
+
   /* Turn On System */
-  r = dac.cmd(DARWIN_CMD_ON, true);
-  if( r == DARWIN_CMD_OK ){ r=0; }
+  r = dac.cmd(DYNAMIXEL_CMD_ON, true);
+  if( r == DYNAMIXEL_CMD_OK ){ r=0; }
   else{ printf("1\n"); return 1; }
 
   /* Get into home positon */
-  for(int i = DARWIN_MOTOR_MIN; i <= DARWIN_MOTOR_MAX; i++)
-  {
-    dac.stageRefPos(i, 0.0);
+ 
+  while(1)
+  { 
+//    dac.stageRefPos(mot, -0.05);
+    dac.stageRefVel(mot, 0.0);
+    dac.stageRefTorque(mot, 0.0);
+    dac.postRef();
+    dac.sleep(2.0);
+    
+//    dac.stageRefPos(mot, 0.05);
+    dac.stageRefVel(mot, 0.0);
+    dac.stageRefTorque(mot, 0.0);
+    dac.postRef();
+    dac.sleep(0.5);
+    printf("0\n");
   }
-  dac.postRef();
-  dac.sleep(2.0);
-
-  /* Set Lower Body to be high torque and fast */
-  for(int i = DARWIN_MOTOR_MIN_LOWER; i <= DARWIN_MOTOR_MAX_LOWER; i++)
-  {
-    dac.stageRefVel(i, 100.0);
-    dac.stageRefTorque(i, 100.0);
-  }
-  dac.postRef();
-  dac.sleep(0.5);
-  printf("0\n");
   return 0;
 }

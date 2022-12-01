@@ -124,23 +124,21 @@ DynamixelAch::DynamixelAch()
 
   /* Do initial put on the channel to make sure the exist */
   ach_put(&this->chan_dynamixel_ref,         &this->dynamixel_ref,         sizeof(this->dynamixel_ref));
-  ach_put(&this->chan_dynamixel_ref_walking, &this->dynamixel_ref_walking, sizeof(this->dynamixel_ref_walking));
   ach_put(&this->chan_dynamixel_state,       &this->dynamixel_state,       sizeof(this->dynamixel_state));
   ach_put(&this->chan_dynamixel_cmd,         &this->dynamixel_cmd,         sizeof(this->dynamixel_cmd));
   ach_put(&this->chan_dynamixel_cmd_return,  &this->dynamixel_cmd_return,  sizeof(this->dynamixel_cmd_return));
-  ach_put(&this->chan_dynamixel_cmd_vel,  &this->dynamixel_cmd_vel,  sizeof(this->dynamixel_cmd_vel));
 
   this->dynamixel_time = this->dl->time();
-  ach_put(&this->chan_dynamixel_time,  &this->dynamixel_time,  sizeof(this->dynamixel_time));
+  ach_put(&this->chan_dynamixel_time,        &this->dynamixel_time,        sizeof(this->dynamixel_time));
   return;
 }
 
-int id_clear()
+int DynamixelAch::id_clear()
 {
   this->dyn_id.clear();
   return 0;
 }
-int id_add(int the_id)
+int DynamixelAch::id_add(int the_id)
 {
   this->dyn_id.push_back(the_id);
   return 0;

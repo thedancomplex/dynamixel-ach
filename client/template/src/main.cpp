@@ -21,26 +21,32 @@
 #include <string.h>
 
 #define MOT_ID 4
-double mot_pos = 0.2;
+double mot_pos = 0.05;
+double bpm     = 60.0;
+double T       = (bpm / 60.0) / 2.0;
+double f       = 1/T;
 
 
 int main()
 { 
   /* Make System Object */
   DynamixelAchClient dac = DynamixelAchClient();
-  dac.setRefMode(MODE_REF);
 
   int r = 0;
-
 
   /* Turn On System */
   r = dac.cmd(DYNAMIXEL_CMD_ON, true);
   if( r == DYNAMIXEL_CMD_OK ){ r=0; }
   else{ printf("1\n"); return 1; }
 
+
+  /* Add ID */
   r = dac.cmd(DYNAMIXEL_CMD_ID_ADD, (int16_t)MOT_ID);
   if( r == DYNAMIXEL_CMD_OK ){ r=0; }
   else{ printf("1\n"); return 1; }
+
+
+  dac.rate( f );
  
   while(1)
   { 
@@ -49,7 +55,7 @@ int main()
     dac.stageRefVel(MOT_ID, 100.0);
     dac.stageRefTorque(MOT_ID, 0.3);
     dac.postRef();
-    dac.sleep(0.1);
+    dac.sleep();
     
     printf("0\n");
   }

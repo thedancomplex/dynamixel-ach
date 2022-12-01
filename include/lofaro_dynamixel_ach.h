@@ -451,17 +451,17 @@ int DynamixelAch::do_ref(int mode)
   int move_mode = m_REF_MODE;
   //int move_mode = this->dynamixel_ref.mode;
 
-    for (int16_t& i: this->dl->dyn_id)
-    {
-       if( (i <= DYNAMIXEL_MOTOR_MAX) & ( i >= 0) )
-       {
-         this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
-         this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
-         this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
-         ret += this->dl->stageMotor(i);
-       }
-    }
-    ret += this->dl->putMotor(); 
+  for (int16_t& i: this->dl->dyn_id)
+  {
+     if( (i <= DYNAMIXEL_MOTOR_MAX) & ( i >= 0) )
+     {
+       this->dl->dynamixel_data.motor_ref[i].pos    = this->dynamixel_ref.motor_ref[i].pos;
+       this->dl->dynamixel_data.motor_ref[i].speed  = this->dynamixel_ref.motor_ref[i].speed;
+       this->dl->dynamixel_data.motor_ref[i].torque = this->dynamixel_ref.motor_ref[i].torque;
+       ret += this->dl->stageMotor(i);
+     }
+  }
+  ret += this->dl->putMotor(); 
 
   if( ret > 1 ) ret = 1;
   return ret;

@@ -36,15 +36,16 @@ DynamixelLofaro::DynamixelLofaro()
 /* Add ID */
 int DynamixelLofaro::idAdd(int val)
 {
+  if (this->checkId(val) == RETURN_OK) return RETURN_FAIL;
   this->dyn_id.push_back(val);
-  return 0;
+  return RETURN_OK;
 }
 
 /* Clear all IDs */
 int DynamixelLofaro::idClear()
 {
   this->dyn_id.clear();
-  return 0;
+  return RETURN_OK;
 }
 
 /* Open Port */

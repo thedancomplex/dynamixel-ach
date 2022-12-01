@@ -1,6 +1,6 @@
 default: all
 
-CFLAGS := -I./../include -I./../../include -I/usr/local/include/dynamixel_sdk -I/usr/include/x86_64-linux-gnu/ -DLINUX -D_GNU_SOURCE -Wall -O2 -O3 -g 
+CFLAGS := -I./../../include -I./../../../include -I/usr/local/include/dynamixel_sdk -I/usr/include/x86_64-linux-gnu/ -DLINUX -D_GNU_SOURCE -Wall -O2 -O3 -g 
 CC := g++
 
 BINARIES := test

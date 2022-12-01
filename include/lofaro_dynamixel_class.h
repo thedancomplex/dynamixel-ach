@@ -38,9 +38,6 @@ class DynamixelLofaro
     /* Get Motor State */
     int getMotor(int id);
 
-    /* Get Motor State Slow (every "val" cycles) */
-    int getMotorSlow(int val);
-
     /* Stage Motor Position */
     int stageMotor(int mot);
 
@@ -52,15 +49,6 @@ class DynamixelLofaro
 
     /* Send staged motor positions to motor "mot" */
     int putMotor(int mot);
-
-    /* Get IMU State */
-    int getImu();
-
-    /* Get Left and Right FT states */
-    int getFt();
-
-    /* Get "id" FT state */
-    int getFt(int id);
 
     /* Turn on all */
     int on();
@@ -121,11 +109,6 @@ class DynamixelLofaro
     uint8_t getLed();
     int getLed(int val);
 
-    /* Get Button */
-    uint8_t getButton();
-    int getButton(int butt);
-    int getButton(int butt, uint8_t buff);
-
     /* Closes port */
     int close();
 
@@ -140,12 +123,6 @@ class DynamixelLofaro
     int setLowLatency(const char* the_serial_port, bool low_latency);
 
     LofaroUtils* lut = new LofaroUtils();
-
-    /* IMU specific int to double */
-    double int2double(uint16_t val);
-
-    /* FT specific char to double */
-    double ft_char2double(uint8_t val, int* err);
 
     /* double to uint16 for motor pos set */
     uint16_t double2uint16(double val);

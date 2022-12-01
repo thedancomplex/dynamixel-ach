@@ -153,55 +153,6 @@ int DynamixelLofaro::setLowLatency(const char* the_serial_port, bool low_latency
   return RETURN_FAIL;
 }
 
-/* Get IMU State */
-int DynamixelLofaro::getImu()
-{
-  // dynamixel::GroupBulkRead groupBulkReadImu(portHandler, packetHandler);
-  bool dxl_addparam_result = false;               // addParam result
-  groupBulkReadImu.clearParam();
-
-  // Add parameter storage for Dynamixel#1 present position value
-  // +1 is added to read the voltage
-  dxl_addparam_result = groupBulkReadImu.addParam(ID_CM730, 
-                                                        CM730_ADDRESS_IMU_START, 
-                                                        CM730_ADDRESS_IMU_LENGTH+1);
-
-  if (dxl_addparam_result != true) return RETURN_FAIL;
-  bool dxl_getdata_result = false;                // GetParam result
-  uint8_t dxl_error = 0;                          // Dynamixel error
-
-  int dxl_comm_result = COMM_TX_FAIL;             // Communication result
-
-  dxl_comm_result = groupBulkReadImu.txRxPacket();
-  packetHandler->getTxRxResult(dxl_comm_result);
-  if (groupBulkReadImu.getError(ID_CM730, &dxl_error)) return RETURN_FAIL;
-
-  // Check if data is avaliable
-  dxl_getdata_result = groupBulkReadImu.isAvailable(ID_CM730, 
-                                                          CM730_ADDRESS_IMU_START, 
-                                                          CM730_ADDRESS_IMU_LENGTH);
-  if (dxl_getdata_result != true) return RETURN_FAIL;
-
-  // Assign the data
-  uint16_t buff_gyro_x  = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_GYRO_X, 2);
-  uint16_t buff_gyro_y  = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_GYRO_Y, 2);
-  uint16_t buff_gyro_z  = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_GYRO_Z, 2);
-  uint16_t buff_acc_x   = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_ACC_X, 2);
-  uint16_t buff_acc_y   = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_ACC_Y, 2);
-  uint16_t buff_acc_z   = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_IMU_ACC_Z, 2);
-  uint8_t  buff_voltage = groupBulkReadImu.getData(ID_CM730, CM730_ADDRESS_VOLTAGE, 1);
-
-  this->dynamixel_data.imu.gyro_x  = this->int2double(buff_gyro_x) * IMU_GYRO_SCALE;
-  this->dynamixel_data.imu.gyro_y  = this->int2double(buff_gyro_y) * IMU_GYRO_SCALE;
-  this->dynamixel_data.imu.gyro_z  = this->int2double(buff_gyro_z) * IMU_GYRO_SCALE;
-  this->dynamixel_data.imu.acc_x   = this->int2double(buff_acc_x)  * IMU_ACC_SCALE;
-  this->dynamixel_data.imu.acc_y   = this->int2double(buff_acc_y)  * IMU_ACC_SCALE;
-  this->dynamixel_data.imu.acc_z   = this->int2double(buff_acc_z)  * IMU_ACC_SCALE;
-  this->dynamixel_data.imu.voltage = (double)buff_voltage    / VOLTAGE_SCALE;
- 
-  return RETURN_OK;
-}
-
 /* Turn on all */
 int DynamixelLofaro::on()
 {
@@ -332,12 +283,6 @@ int DynamixelLofaro::off(int id)
     return RETURN_OK;
 }
 
-double DynamixelLofaro::int2double(uint16_t val)
-{
-  double the_out = (double)((int32_t)val - 512) / 1023.0;
-  return the_out;
-}
-
 /* Stops and turns off everything */
 int DynamixelLofaro::stop()
 {
@@ -369,90 +314,6 @@ int DynamixelLofaro::rate(double hz)
 double DynamixelLofaro::time()
 {
   return this->lut->getTime();
-}
-
-/* Get Left and Right FT states */
-int DynamixelLofaro::getFt()
-{ 
-  int ret = getFt(ID_FT_LEFT);
-  ret    += getFt(ID_FT_RIGHT);
-  if( ret > 0 ) return RETURN_FAIL;
-  return RETURN_OK; 
-}
-
-/* FT specific char 2 double */
-double DynamixelLofaro::ft_char2double(uint8_t val, int* err)
-{
-    if( val == 255)
-    {
-      *err = RAISED;
-      return 0.0;
-    }
-
-    double the_out = (double)val - 127.0 / 127.0;
-    *err = NOT_RAISED;
-    return the_out;
-}
-
-/* Get "id" FT state */
-int DynamixelLofaro::getFt(int id)
-{ 
-//  dynamixel::GroupBulkRead groupBulkReadFt(portHandler, packetHandler);
-
-  int the_index = -1;
-  if      (id == ID_FT_LEFT)      the_index = ENUM_FT_LEFT;
-  else if (id == ID_FT_RIGHT)     the_index = ENUM_FT_RIGHT;
-  else if (id == ENUM_FT_LEFT)  { the_index = ENUM_FT_LEFT;  id = ID_FT_LEFT; }
-  else if (id == ENUM_FT_RIGHT) { the_index = ENUM_FT_RIGHT; id = ID_FT_RIGHT; }
-  else return RETURN_FAIL;
-
-  bool dxl_addparam_result = false;               // addParam result
-  groupBulkReadFt.clearParam();
-
-  // Add parameter storage for Dynamixel#1 present position value
-  // +1 is added to read the voltage
-  dxl_addparam_result = groupBulkReadFt.addParam(id, FT_ADDRESS_START, FT_ADDRESS_LENGTH);
-  if (dxl_addparam_result != true) return RETURN_FAIL;
-
-  bool dxl_getdata_result = false;                // GetParam result
-  uint8_t dxl_error = 0;                          // Dynamixel error
-
-  int dxl_comm_result = COMM_TX_FAIL;             // Communication result
-
-  dxl_comm_result = groupBulkReadFt.txRxPacket();
-  packetHandler->getTxRxResult(dxl_comm_result);
-  if (groupBulkReadFt.getError(id, &dxl_error)) return RETURN_FAIL;
-
-  // Check if data is avaliable
-  dxl_getdata_result = groupBulkReadFt.isAvailable(id, FT_ADDRESS_START, FT_ADDRESS_LENGTH);
-  if (dxl_getdata_result != true) return RETURN_FAIL;
-
-  // Assign the data
-  uint16_t buff_s1       = groupBulkReadFt.getData(id, FT_ADDRESS_S1, 2);
-  uint16_t buff_s2       = groupBulkReadFt.getData(id, FT_ADDRESS_S2, 2);
-  uint16_t buff_s3       = groupBulkReadFt.getData(id, FT_ADDRESS_S3, 2);
-  uint16_t buff_s4       = groupBulkReadFt.getData(id, FT_ADDRESS_S4, 2);
-  uint16_t buff_fsr_x    = groupBulkReadFt.getData(id, FT_ADDRESS_FSR_X, 2);
-  uint16_t buff_fsr_y    = groupBulkReadFt.getData(id, FT_ADDRESS_FSR_Y, 2);
-  uint8_t  buff_voltage  = groupBulkReadFt.getData(id, FT_ADDRESS_VOLTAGE, 1);
-
-  this->dynamixel_data.ft[the_index].s0   = this->int2double(buff_s1)  * FT_SCALE;
-  this->dynamixel_data.ft[the_index].s1   = this->int2double(buff_s2)  * FT_SCALE;
-  this->dynamixel_data.ft[the_index].s2   = this->int2double(buff_s3)  * FT_SCALE;
-  this->dynamixel_data.ft[the_index].s3   = this->int2double(buff_s4)  * FT_SCALE;
-
-  int ft_fsr_raised_x = 0;
-  int ft_fsr_raised_y = 0;
-
-  this->dynamixel_data.ft[the_index].x    = this->ft_char2double(buff_fsr_x, &ft_fsr_raised_x) * FSR_SCALE_X;
-  this->dynamixel_data.ft[the_index].y    = this->ft_char2double(buff_fsr_y, &ft_fsr_raised_y) * FSR_SCALE_Y;
-
-  this->dynamixel_data.ft[the_index].raised_x = ft_fsr_raised_x;
-  this->dynamixel_data.ft[the_index].raised_y = ft_fsr_raised_y;
-   
-  this->dynamixel_data.ft[the_index].voltage  = (double)buff_voltage / VOLTAGE_SCALE;
-
-return RETURN_OK; 
 }
 
 uint16_t DynamixelLofaro::double2uint16(double val)
@@ -624,25 +485,6 @@ int DynamixelLofaro::putMotor(int mot)
   return RETURN_OK; 
 }
 
-
-int gms_i   = DYNAMIXEL_MOTOR_MIN;
-int gms_val = 0;
-int DynamixelLofaro::getMotorSlow(int val)
-{
-  /* Stage all motor positions torques and speeds */
-  if(gms_val >= val) gms_val = 0;
-
-  if (gms_val == 0)
-  {
-    gms_i++;
-    if( gms_i > DYNAMIXEL_MOTOR_MAX ) gms_i = DYNAMIXEL_MOTOR_MIN;
-    gms_val++;
-    return this->getMotor(gms_i);
-  }
-
-  return RETURN_FAIL;
-}
-
 int DynamixelLofaro::getMotor()
 {
   /* Stage all motor positions torques and speeds */
@@ -760,33 +602,6 @@ int DynamixelLofaro::setIGain(int mot, double val)
 int DynamixelLofaro::setDGain(int mot, double val)
 {
   return this->setGain(mot, val, DYNAMIXEL_ENUM_D_GAIN);
-}
-
-/* Get Button */
-uint8_t DynamixelLofaro::getButton()
-{
-  uint8_t buff = 0;
-  int e = this->read(ID_CM730, CM730_ADDRESS_BUTTON, &buff);
-  return buff;
-}
-
-int DynamixelLofaro::getButton(int butt, uint8_t buff)
-{
-  if(butt > 1) return -1;
-  if(butt < 0) return -1;
-
-  uint8_t b = 1;
-  b = b << butt;
-  
-  buff = buff & b;
-  if( buff > 0 ) return 1;
-  return 0;
-}
-
-int DynamixelLofaro::getButton(int butt)
-{
-  uint8_t buff = this->getButton();
-  return this->getButton(butt, buff);
 }
 
 /* Get LED */

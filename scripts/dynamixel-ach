@@ -1,0 +1,111 @@
+#!/bin/bash
+
+UTILS_NAME=dynamixel-ach-utils
+PROJECT_NAME=dynamixel-ach
+INSTALL_DIR=/etc/$PROJECT_NAME
+SERVER_NAME=server_$PROJECT_NAME
+
+Make()
+{
+  $UTILS_NAME ach-make
+}
+
+Start()
+{
+  Make
+  if ! screen -list | grep -q "$SERVER_NAME"; then
+    screen -S $SERVER_NAME -d -m bash -c "$UTILS_NAME start-daemon"
+  fi
+  Status
+}
+
+Stop()
+{
+  screen -S $SERVER_NAME -p 0 -X quit
+  echo 'System Stopped'
+}
+
+Status()
+{
+  if ! screen -list | grep -q "$SERVER_NAME"; then
+    echo 'System Stopped'
+  else
+      echo 'System Running'
+  fi
+}
+
+Kill()
+{
+  Stop
+  $UTILS_NAME ach-clear
+}
+
+Reset()
+{
+  Kill
+  Make
+}
+
+LowLatency()
+{
+  $UTILS_NAME low-latency
+}
+
+ShowUsage()
+{
+	echo 
+	echo '================================================='
+	echo '================================================='
+	echo '============  Dynamixel Lofaro Ach  ============='
+	echo '================================================='
+	echo '=============== Daniel M. Lofaro ================'
+	echo '=============== dan@danlofaro.com ==============='
+	echo '================================================='
+	echo '================================================='
+	echo ''
+	echo 'start         : Starts the Dynamixel Ach System  '
+	echo ''
+	echo 'stop          : Stops the Dynamixel Ach System   '
+	echo ''
+	echo 'status        : Checks to see if the system is   '
+	echo '                running: Human readable          '
+	echo ''
+        echo 'kill          : Kill all processes and IPC channels'
+        echo ''
+        echo 'reset         : Resets the IPC                   '
+        echo ''
+	echo 'low-latency   : sets serial to low latency mode  '
+	echo ''
+	echo
+}
+
+
+case "$1" in
+	'start' )
+		Start
+	;;
+	'stop' )
+		Stop
+	;;
+	'status' )
+		Status
+	;;
+	'kill' )
+		Kill
+	;;
+	'reset' )
+		Reset
+	;;
+	'low-latency' )
+		LowLatency
+	;;
+	
+	* )
+		ShowUsage
+		exit 1
+esac
+
+exit 0
+
+
+

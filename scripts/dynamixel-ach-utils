@@ -32,6 +32,19 @@ DYNAMIXEL_ACH_CHAN_TIME='dynamixel-ach-chan-time'
 #DYNAMIXEL_IP='10.5.0.249'
 DYNAMIXEL_IP='10.111.111.11'
 
+# Dynamixel Ach specific
+UTILS_NAME=dynamixel-ach-utils
+PROJECT_NAME=dynamixel-ach
+INSTALL_DIR=/etc/$PROJECT_NAME
+SERVER_NAME=server_$PROJECT_NAME
+SERVER_BIN_NAME=dynamixel-ach-server
+SERVER_DIR=server/server
+
+Start()
+{
+  $INSTALL_DIR/$SERVER_DIR/$SERVER_BIN_NAME
+}
+
 RosAchBridgeMonitor()
 {
   source $ROS_SOURCE_SCRIPT
@@ -235,7 +248,7 @@ Status()
 	fi
 }
 
-Start()
+StartOrig()
 {
   DynamixelLegacyRos2Start
   DynamixelLegacyClockRos2Start
@@ -492,8 +505,7 @@ ShowUsage()
 	echo ''
 	echo 'low-latency   : sets serial to low latency mode  '
 	echo ''
-	echo 'start-daemon  : Starts the Dynamixel Lofaro Legacy  '
-	echo '                system                           '
+	echo 'start-daemon  : Starts the Dynamixel Ach System  '
 	echo ''
 	echo 'start-clock   : Starts the Dynamixel Lofaro Legacy  '
 	echo '                clock                            '
@@ -574,7 +586,8 @@ case "$1" in
 		Start $@
 	;;
 	'start-daemon' )
-		DynamixelLegacyRos2Start $@
+                DynamixelAchServer
+		#DynamixelLegacyRos2Start $@
 	;;
 	'start-clock' )
 		DynamixelLegacyClockRos2Start $@

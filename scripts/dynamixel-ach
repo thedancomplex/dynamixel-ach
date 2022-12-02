@@ -14,7 +14,7 @@ Start()
 {
   Make
   if ! screen -list | grep -q "$SERVER_NAME"; then
-    screen -S $SERVER_NAME -d -m bash -c "$UTILS_NAME start-daemon"
+    screen -S $SERVER_NAME -d -m bash -c "$UTILS_NAME start"
   fi
   Status
 }

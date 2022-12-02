@@ -21,10 +21,10 @@
 #include <string.h>
 
 #define MOT_ID 4
-double mot_pos = 0.05;
+double mot_pos = 0.2;
 double bpm     = 60.0;
-double T       = (bpm / 60.0) / 2.0;
-double f       = 1/T;
+/* Output freequency, * 2.0 because one cycle is up and down */
+double f       = (bpm / 60.0) * 2.0;
 
 
 int main()
@@ -45,7 +45,7 @@ int main()
   if( r == DYNAMIXEL_CMD_OK ){ r=0; }
   else{ printf("1\n"); return 1; }
 
-
+  printf("Freq = %f\n", f/2.0);
   dac.rate( f );
  
   while(1)

@@ -337,9 +337,9 @@ int DynamixelAchClient::cmd(int cmd, int16_t data[4], double data_float[4], bool
     this->dynamixel_cmd.data[i] = data[i];
     this->dynamixel_cmd.data_float[i] = data_float[i];
   }
-  printf("id = %d - data = %d\n", this->dynamixel_cmd.cmd, this->dynamixel_cmd.data[0]);
 
   r = ach_put(&this->chan_dynamixel_cmd, &this->dynamixel_cmd, sizeof(this->dynamixel_cmd));
+  printf("CMD = %d - data = %d\n", this->dynamixel_cmd.cmd, this->dynamixel_cmd.data[0]);
 
   /* Waits until return of cmd if the a block of "ture" is sent */
   if(block)

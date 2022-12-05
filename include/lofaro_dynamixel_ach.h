@@ -126,6 +126,8 @@ DynamixelAch::DynamixelAch()
   ach_put(&this->chan_dynamixel_cmd,         &this->dynamixel_cmd,         sizeof(this->dynamixel_cmd));
   ach_put(&this->chan_dynamixel_cmd_return,  &this->dynamixel_cmd_return,  sizeof(this->dynamixel_cmd_return));
 
+  printf("DYNAMIXEL_CMD_ID_ADD = %d\n",DYNAMIXEL_CMD_ID_ADD);
+
   this->dynamixel_time = this->dl->time();
   ach_put(&this->chan_dynamixel_time,        &this->dynamixel_time,        sizeof(this->dynamixel_time));
   return;
@@ -183,18 +185,21 @@ int DynamixelAch::do_cmd(int mode)
     {
       case DYNAMIXEL_CMD_ID_ADD:
       {
-        printf("%d\n",this->idAdd(this->dynamixel_cmd.data[0]));
+        printf("CMD: ID ADD\n");
+        printf("ID add - id: %d, return: %d\n",this->dynamixel_cmd.data[0], this->idAdd(this->dynamixel_cmd.data[0]));
         do_return = true;
         break;
       } 
       case DYNAMIXEL_CMD_ID_RESET:
       {
+        printf("CMD: ID Reset \n");
         this->idClear();
         do_return = true;
         break;
       }
       case DYNAMIXEL_CMD_CLOSE:
       {
+        printf("CMD: Close Port \n");
         this->dl->close();
         this->dl->sleep(2.0);
         this->run_loop = false;
@@ -203,6 +208,7 @@ int DynamixelAch::do_cmd(int mode)
       }
       case DYNAMIXEL_CMD_OPEN:
       {
+        printf("CMD: Open Port\n");
         this->dl->setup("/dev/ttyUSB0", true);
         this->dl->sleep(2.0);
         this->run_loop = true;
@@ -211,6 +217,7 @@ int DynamixelAch::do_cmd(int mode)
       }
       case DYNAMIXEL_CMD_ON:
       {
+        printf("CMD: Turn System On\n");
         this->dl->setup("/dev/ttyUSB0", true);
         this->dl->sleep(1.0);
         this->dl->on();
@@ -221,6 +228,7 @@ int DynamixelAch::do_cmd(int mode)
       }
       case DYNAMIXEL_CMD_ON_MOTOR:
       {
+        printf("CMD: Turn Motor %d On \n", dynamixel_cmd.data[0]);
         this->dl->setup("/dev/ttyUSB0", true);
         this->dl->sleep(1.0);
         this->dl->on(dynamixel_cmd.data[0]);
@@ -231,6 +239,7 @@ int DynamixelAch::do_cmd(int mode)
       }
       case DYNAMIXEL_CMD_OFF:
       {
+        printf("CMD: Turn System Off\n");
         this->run_loop = false;
         this->dl->off();
         this->dl->stop();
@@ -239,6 +248,7 @@ int DynamixelAch::do_cmd(int mode)
       }
       case DYNAMIXEL_CMD_LOOP_MODE:
       {
+        printf("CMD: Set Loop Mode\n");
         int d0 = this->dynamixel_cmd.data[0];
         if( d0 == HZ_STATE_MOTORS )
         { 
@@ -251,6 +261,7 @@ int DynamixelAch::do_cmd(int mode)
       }
       case DYNAMIXEL_CMD_MODE:
       {
+        printf("CMD: Set Reference CMD Mode\n");
         int d0 = this->dynamixel_cmd.data[0];
         if( d0 == MODE_REF )
         { 

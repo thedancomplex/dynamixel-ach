@@ -19,7 +19,7 @@
 #include "lofaro_dynamixel.h"
 #include <unistd.h>
 
-#define MOT_ID 4
+#define MOT_ID 5
 double mot_pos = 0.2;
 
 int main()

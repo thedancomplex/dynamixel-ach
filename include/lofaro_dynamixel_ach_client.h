@@ -62,6 +62,7 @@ class DynamixelAchClient
     double getCmdVelY();  
     double getCmdVelThetaZ(); 
 
+    int setCmdReturn(bool cmd_val);
 
     /* Data types */
     dynamixel_data_def_t     dynamixel_ref;
@@ -101,7 +102,11 @@ class DynamixelAchClient
     /* Command Time Channel */
     ach_channel_t chan_dynamixel_time;
 
+    bool m_default_cmd_return = true;
+
 };
+
+
 DynamixelAchClient::DynamixelAchClient()
 {
   this->constructDynamixelAchClient(false);
@@ -112,6 +117,12 @@ DynamixelAchClient::DynamixelAchClient(bool do_flush)
 {
   this->constructDynamixelAchClient(do_flush);
   return;
+}
+
+int DynamixelAchClient::setCmdReturn(bool cmd_val)
+{
+    m_default_cmd_return = cmd_val;
+    return 0;
 }
 
 void DynamixelAchClient::constructDynamixelAchClient(bool do_flush)
@@ -270,7 +281,7 @@ int DynamixelAchClient::postCmdVel()
   return 0;
 }
 
-int DynamixelAchClient::cmd(int cmd){ return this->cmd(cmd, false); }
+int DynamixelAchClient::cmd(int cmd){ return this->cmd(cmd, m_default_cmd_return); }
 int DynamixelAchClient::cmd(int cmd, bool block)
 {
   int16_t data[4];
@@ -280,7 +291,7 @@ int DynamixelAchClient::cmd(int cmd, bool block)
   return this->cmd(cmd, data, data_float, block);
 }
 
-int DynamixelAchClient::cmd(int cmd, int16_t d0){ return this->cmd(cmd, d0, false); }
+int DynamixelAchClient::cmd(int cmd, int16_t d0){ return this->cmd(cmd, d0, m_default_cmd_return); }
 int DynamixelAchClient::cmd(int cmd, int16_t d0, bool block)
 {
   int16_t data[4];
@@ -291,7 +302,7 @@ int DynamixelAchClient::cmd(int cmd, int16_t d0, bool block)
   return this->cmd(cmd, data, data_float, block);
 }
 
-int DynamixelAchClient::cmd(int cmd, int16_t d0, int16_t d1){ return this->cmd(cmd, d0, d1, false); }
+int DynamixelAchClient::cmd(int cmd, int16_t d0, int16_t d1){ return this->cmd(cmd, d0, d1, m_default_cmd_return); }
 int DynamixelAchClient::cmd(int cmd, int16_t d0, int16_t d1, bool block)
 {
   int16_t data[4];
@@ -303,7 +314,7 @@ int DynamixelAchClient::cmd(int cmd, int16_t d0, int16_t d1, bool block)
   return this->cmd(cmd, data, data_float, block);
 }
 
-int DynamixelAchClient::cmd(int cmd, int16_t d0, double f0){ return this->cmd(cmd, d0, f0, false); }
+int DynamixelAchClient::cmd(int cmd, int16_t d0, double f0){ return this->cmd(cmd, d0, f0, m_default_cmd_return); }
 int DynamixelAchClient::cmd(int cmd, int16_t d0, double f0, bool block)
 {
   int16_t data[4];
@@ -315,7 +326,7 @@ int DynamixelAchClient::cmd(int cmd, int16_t d0, double f0, bool block)
   return this->cmd(cmd, data, data_float, block);
 }
 
-int DynamixelAchClient::cmd(int cmd, int16_t data[4]){ return this->cmd(cmd, data, false); }
+int DynamixelAchClient::cmd(int cmd, int16_t data[4]){ return this->cmd(cmd, data, m_default_cmd_return); }
 int DynamixelAchClient::cmd(int cmd, int16_t data[4], bool block)
 {
   double  data_float[4];
@@ -323,7 +334,7 @@ int DynamixelAchClient::cmd(int cmd, int16_t data[4], bool block)
   return this->cmd(cmd, data, data_float, block);
 }
 
-int DynamixelAchClient::cmd(int cmd, int16_t data[4], double data_float[4]){ return this->cmd(cmd, data, data_float, false); }
+int DynamixelAchClient::cmd(int cmd, int16_t data[4], double data_float[4]){ return this->cmd(cmd, data, data_float, m_default_cmd_return); }
 int DynamixelAchClient::cmd(int cmd, int16_t data[4], double data_float[4], bool block)
 {
   if( cmd == DYNAMIXEL_CMD_MODE ) ref_mode = data[0];

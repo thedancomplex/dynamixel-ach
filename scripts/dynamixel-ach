@@ -51,6 +51,12 @@ LowLatency()
   $UTILS_NAME low-latency
 }
 
+Remote()
+{
+  Make
+  $UTILS_NAME ach-remote $1
+}
+
 ShowUsage()
 {
 	echo 
@@ -76,6 +82,11 @@ ShowUsage()
         echo ''
 	echo 'low-latency   : sets serial to low latency mode  '
 	echo ''
+	echo 'remote        : Creates remote ach connection    '
+	echo '                to push values to                '
+	echo '      IP      : IP address of the remote computer'
+	echo '                to push to                       '
+	echo ''
 	echo
 }
 
@@ -98,6 +109,10 @@ case "$1" in
 	;;
 	'low-latency' )
 		LowLatency
+	;;
+
+	'remote' )
+		Remote $2
 	;;
 	
 	* )

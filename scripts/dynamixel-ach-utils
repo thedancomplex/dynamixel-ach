@@ -614,7 +614,7 @@ case "$1" in
 	;;
 
 	'ach-remote' )
-		AchRemote $DYNAMIXEL_IP
+		AchRemote $2
 	;;
 
 	'ach-kill' )

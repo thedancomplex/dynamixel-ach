@@ -29,7 +29,8 @@ int main()
   r = da.open();
 
   printf("Start System Loop\n");
-  r = da.loop(200.0, HZ_STATE_MOTORS);
+//  r = da.loop(200.0, HZ_STATE_MOTORS);
+  r = da.loop(100.0, HZ_STATE_MOTORS);
   
   return 0;
 }

@@ -37,6 +37,7 @@ Status()
 Kill()
 {
   Stop
+  kill -9 $(pidof achd)
   $UTILS_NAME ach-clear
 }
 

@@ -6,3 +6,4 @@ an ach translation for the ROBOTIS Dynamixel actuators
 * Add tutorial as to how to use it
 * Improve Install
 * Add Ros2 bridge start
+* Fix install for ubuntu SBC
